@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <button class="btn btn-danger">应用算法</button>
+    </div>
+    <hr>
+    <div id="set_trucks" class="container">
+        <h4>车辆配置</h4>
+
+        <form id="123">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">名称</th>
+                    <th scope="col">数量</th>
+                    <th scope="col">距离上限</th>
+                    <th scope="col">载重上限</th>
+                    <th scope="col">操作</th>
+                </tr>
+                </thead>
+                <tbody id="trucks">
+                <tr>
+                    <th scope="row"><input name="name[0]" type="text" class="form-control form-control-sm"></th>
+                    <td><input name="number[0]" type="number" class="form-control form-control-sm"></td>
+                    <td><input name="dMax[0]" type="number" class="form-control form-control-sm"></td>
+                    <td><input name="wMax[0]" type="number" class="form-control form-control-sm"></td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-success">确定</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger">删除</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><input name="name[1]" value="Trucks" type="text"
+                                           class="form-control form-control-sm">
+                    </th>
+                    <td><input name="number[1]" value="3" type="number" class="form-control form-control-sm" disabled>
+                    </td>
+                    <td><input name="dMax[1]" value="7" type="number" class="form-control form-control-sm" disabled>
+                    </td>
+                    <td><input name="wMax[1]" value="12" type="number" class="form-control form-control-sm" disabled>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-success">确定</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+        <button type="button" class="btn btn-primary">添加车辆</button>
+        <button type="button" class="btn btn-success">保存</button>
+    </div>
+    <hr>
+    <div id="set_network" class="container">
+        <h4>配送网络配置</h4>
+        <form>
+        </form>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        $(document).ready(function () {
+        });
+    </script>
+{% endblock %}

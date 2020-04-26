@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div id="set_trucks" class="container">
+        <h4>车辆配置</h4>
+        <form id="trucks_form">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">名称</th>
+                    <th scope="col">数量</th>
+                    <th scope="col">距离上限</th>
+                    <th scope="col">载重上限</th>
+                    <th scope="col">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for truck in trucks_data %}
+                    <tr>
+                        <th scope="row"><input name="name[]" value="{{ truck['name'] }}" type="text"
+                                               class="form-control form-control-sm" disabled></th>
+                        <td><input name="nums[]" value="{{ truck['nums'] }}" type="number"
+                                   class="form-control form-control-sm" disabled></td>
+                        <td><input name="d_max[]" value="{{ truck['d_max'] }}" type="number"
+                                   class="form-control form-control-sm" disabled></td>
+                        <td><input name="w_max[]" value="{{ truck['w_max'] }}" type="number"
+                                   class="form-control form-control-sm" disabled></td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary modify">修改
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success confirm" hidden>确定
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger del">删除
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <button id="add" type="button" class="btn btn-primary">添加车辆</button>
+            <button id="save" type="button" class="btn btn-success">保存</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        $('.modify').click(function () {
+            let parent = $(this).parent();
+            $(".modify", parent).attr("hidden", true);
+            $(".confirm", parent).attr("hidden", false);
+            $("input", parent.parent()).attr("disabled", false);
+        });
+
+        $('.confirm').click(function () {
+            let parent = $(this).parent();
+            $(".confirm", parent).attr("hidden", true);
+            $(".modify", parent).attr("hidden", false);
+            $("input", parent.parent()).attr("disabled", true);
+        });
+
+        $(".del").click(function () {
+            $(this).parent().parent().remove();
+        });
+
+        $("#add").click(function () {
+            let table = $("tbody");
+            table.children(":first").clone(true).appendTo(table);
+            let self = table.children(":last");
+            $(".modify", self).attr("hidden", true);
+            $(".confirm", self).attr("hidden", false);
+            $("input", self).attr({"value": "", "disabled": false});
+        })
+
+        $("#save").click(function () {
+            $("input", "tbody").attr("disabled", false);
+            //console.log($("#trucks_form").serialize());
+            $.ajax("{{ url_for('set_trucks') }}", {
+                method: "POST",
+                //contentType: "application/json",
+                data: $("#trucks_form").serialize(),
+                success: function (data) {
+                    console.log(data);
+                }
+            })
+            $("input", "tbody").attr("disabled", true);
+        })
+    </script>
+{% endblock %}

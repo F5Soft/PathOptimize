@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div id="set_trucks" class="container">
+        <h4>网络配置</h4>
+        <form id="network_form">
+            待实现
+            <button id="add" type="button" class="btn btn-primary">添加车辆</button>
+            <button id="save" type="button" class="btn btn-success">保存</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        $('.modify').click(function () {
+            let parent = $(this).parent();
+            $(".modify", parent).attr("hidden", true);
+            $(".confirm", parent).attr("hidden", false);
+            $("input", parent.parent()).attr("disabled", false);
+        });
+
+        $('.confirm').click(function () {
+            let parent = $(this).parent();
+            $(".confirm", parent).attr("hidden", true);
+            $(".modify", parent).attr("hidden", false);
+            $("input", parent.parent()).attr("disabled", true);
+        });
+
+        $(".del").click(function () {
+            $(this).parent().parent().remove();
+        });
+
+        $("#add").click(function () {
+            let table = $("tbody");
+            table.children(":first").clone(true).appendTo(table);
+            let self = table.children(":last");
+            $(".modify", self).attr("hidden", true);
+            $(".confirm", self).attr("hidden", false);
+            $("input", self).attr({"value": "", "disabled": false});
+        })
+
+        $("#save").click(function () {
+            $("input", "tbody").attr("disabled", false);
+            //console.log($("#trucks_form").serialize());
+            $.ajax("{{ url_for('set_trucks') }}", {
+                method: "POST",
+                //contentType: "application/json",
+                data: $("#trucks_form").serialize(),
+                success: function (data) {
+                    console.log(data);
+                }
+            })
+            $("input", "tbody").attr("disabled", true);
+        })
+    </script>
+{% endblock %}
