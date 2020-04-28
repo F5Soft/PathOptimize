@@ -1,7 +1,5 @@
 from flask import *
 
-from modules.algorithm import *
-
 app = Flask(__name__)
 
 

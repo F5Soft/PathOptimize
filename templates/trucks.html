@@ -3,8 +3,8 @@
 {% block content %}
     <div id="set_trucks" class="container">
         <h4>车辆配置</h4>
-        <form id="trucks_form">
-            <table class="table table-bordered table-hover">
+        <form id="trucks_form" class="was-validated">
+            <table class="table table-bordered">
                 <thead class="thead-light">
                 <tr>
                     <th scope="col">名称</th>
@@ -18,13 +18,13 @@
                 {% for truck in trucks_data %}
                     <tr>
                         <th scope="row"><input name="name[]" value="{{ truck['name'] }}" type="text"
-                                               class="form-control form-control-sm" disabled></th>
+                                               class="form-control form-control-sm" readonly required></th>
                         <td><input name="nums[]" value="{{ truck['nums'] }}" type="number"
-                                   class="form-control form-control-sm" disabled></td>
+                                   class="form-control form-control-sm" readonly required min="1"></td>
                         <td><input name="d_max[]" value="{{ truck['d_max'] }}" type="number"
-                                   class="form-control form-control-sm" disabled></td>
+                                   class="form-control form-control-sm" readonly required min="1"></td>
                         <td><input name="w_max[]" value="{{ truck['w_max'] }}" type="number"
-                                   class="form-control form-control-sm" disabled></td>
+                                   class="form-control form-control-sm" readonly required min="1"></td>
                         <td>
                             <button type="button" class="btn btn-sm btn-outline-primary modify">修改
                             </button>
@@ -49,14 +49,20 @@
             let parent = $(this).parent();
             $(".modify", parent).attr("hidden", true);
             $(".confirm", parent).attr("hidden", false);
-            $("input", parent.parent()).attr("disabled", false);
+            $("input", parent.parent()).attr("readonly", false);
         });
 
         $('.confirm').click(function () {
             let parent = $(this).parent();
+            let input = $("input", parent.parent());
+            for (let i = 1; i < input.length; i++) {
+                if (input.get(i).validity.valid === false) {
+                    return;
+                }
+            }
             $(".confirm", parent).attr("hidden", true);
             $(".modify", parent).attr("hidden", false);
-            $("input", parent.parent()).attr("disabled", true);
+            input.attr("readonly", true);
         });
 
         $(".del").click(function () {
@@ -69,21 +75,23 @@
             let self = table.children(":last");
             $(".modify", self).attr("hidden", true);
             $(".confirm", self).attr("hidden", false);
-            $("input", self).attr({"value": "", "disabled": false});
+            $("input", self).attr({"value": "", "readonly": false});
         })
 
         $("#save").click(function () {
-            $("input", "tbody").attr("disabled", false);
-            //console.log($("#trucks_form").serialize());
-            $.ajax("{{ url_for('set_trucks') }}", {
-                method: "POST",
-                //contentType: "application/json",
-                data: $("#trucks_form").serialize(),
-                success: function (data) {
-                    console.log(data);
-                }
-            })
-            $("input", "tbody").attr("disabled", true);
+            let form = $("#trucks_form");
+            if (form.get(0).checkValidity() === true) {
+                $.ajax("{{ url_for('set_trucks') }}", {
+                    method: "POST",
+                    data: form.serialize(),
+                    success: function (data) {
+                        console.log(data);
+                    }
+                })
+                $("input", "tbody").attr("readonly", true);
+                $(".confirm", "tbody").attr("hidden", true);
+                $(".modify", "tbody").attr("hidden", false);
+            }
         })
     </script>
 {% endblock %}

@@ -2,56 +2,78 @@
 
 {% block content %}
     <div id="set_trucks" class="container">
-        <h4>网络配置</h4>
-        <form id="network_form">
-            待实现
-            <button id="add" type="button" class="btn btn-primary">添加车辆</button>
-            <button id="save" type="button" class="btn btn-success">保存</button>
-        </form>
+        <h4>配送网络配置</h4>
+        <div id="echart" style="width: 600px; height: 400px; margin: auto;"></div>
     </div>
 {% endblock %}
 
 {% block script %}
+    <script src="{{ url_for('static', filename = 'js/echarts.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'js/dataTool.min.js') }}"></script>
     <script>
-        $('.modify').click(function () {
-            let parent = $(this).parent();
-            $(".modify", parent).attr("hidden", true);
-            $(".confirm", parent).attr("hidden", false);
-            $("input", parent.parent()).attr("disabled", false);
-        });
+        var dom = document.getElementById("echart");
+        var myChart = echarts.init(dom);
+        var app = {};
+        option = null;
+        myChart.showLoading();
+        $.get("{{ url_for('static', filename='gexf/test.gexf') }}", function (xml) {
+            myChart.hideLoading();
 
-        $('.confirm').click(function () {
-            let parent = $(this).parent();
-            $(".confirm", parent).attr("hidden", true);
-            $(".modify", parent).attr("hidden", false);
-            $("input", parent.parent()).attr("disabled", true);
-        });
+            var graph = echarts.dataTool.gexf.parse(xml);
+            var categories = [];
+            for (var i = 0; i < 9; i++) {
+                categories[i] = {
+                    name: '类目' + i
+                };
+            }
+            graph.nodes.forEach(function (node) {
+                node.itemStyle = null;
+                node.symbolSize = 10;
+                node.value = node.symbolSize;
+                node.category = node.attributes.modularity_class;
+                // Use random x, y
+                node.x = node.y = null;
+                node.draggable = true;
+            });
+            option = {
+                title: {
+                    text: 'Les Miserables',
+                    subtext: 'Default layout',
+                    top: 'bottom',
+                    left: 'right'
+                },
+                tooltip: {},
+                legend: [{
+                    // selectedMode: 'single',
+                    data: categories.map(function (a) {
+                        return a.name;
+                    })
+                }],
+                animation: false,
+                series: [
+                    {
+                        name: 'Les Miserables',
+                        type: 'graph',
+                        layout: 'force',
+                        data: graph.nodes,
+                        links: graph.links,
+                        categories: categories,
+                        roam: true,
+                        label: {
+                            position: 'right'
+                        },
+                        force: {
+                            repulsion: 100
+                        }
+                    }
+                ]
+            };
 
-        $(".del").click(function () {
-            $(this).parent().parent().remove();
-        });
-
-        $("#add").click(function () {
-            let table = $("tbody");
-            table.children(":first").clone(true).appendTo(table);
-            let self = table.children(":last");
-            $(".modify", self).attr("hidden", true);
-            $(".confirm", self).attr("hidden", false);
-            $("input", self).attr({"value": "", "disabled": false});
-        })
-
-        $("#save").click(function () {
-            $("input", "tbody").attr("disabled", false);
-            //console.log($("#trucks_form").serialize());
-            $.ajax("{{ url_for('set_trucks') }}", {
-                method: "POST",
-                //contentType: "application/json",
-                data: $("#trucks_form").serialize(),
-                success: function (data) {
-                    console.log(data);
-                }
-            })
-            $("input", "tbody").attr("disabled", true);
-        })
+            myChart.setOption(option);
+        }, 'xml');
+        ;
+        if (option && typeof option === "object") {
+            myChart.setOption(option, true);
+        }
     </script>
 {% endblock %}
