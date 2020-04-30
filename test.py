@@ -7,3 +7,5 @@ if __name__ == "__main__":
     for t in alg.network.trucks:
         print(t)
         print(t.coverage)
+        if len(t.coverage) > 1:
+            alg.network.path_generate(t)
