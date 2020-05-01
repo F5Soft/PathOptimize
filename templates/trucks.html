@@ -17,13 +17,13 @@
                 <tbody>
                 {% for truck in trucks_data %}
                     <tr>
-                        <th scope="row"><input name="name[]" value="{{ truck['name'] }}" type="text"
+                        <th scope="row"><input name="name[]" value="{{ truck[0] }}" type="text"
                                                class="form-control form-control-sm" readonly required></th>
-                        <td><input name="nums[]" value="{{ truck['nums'] }}" type="number"
+                        <td><input name="nums[]" value="{{ truck[1] }}" type="number"
                                    class="form-control form-control-sm" readonly required min="1"></td>
-                        <td><input name="d_max[]" value="{{ truck['d_max'] }}" type="number"
+                        <td><input name="d_max[]" value="{{ truck[2] }}" type="number"
                                    class="form-control form-control-sm" readonly required min="1"></td>
-                        <td><input name="w_max[]" value="{{ truck['w_max'] }}" type="number"
+                        <td><input name="w_max[]" value="{{ truck[3] }}" type="number"
                                    class="form-control form-control-sm" readonly required min="1"></td>
                         <td>
                             <button type="button" class="btn btn-sm btn-outline-primary modify">修改

@@ -1,5 +1,6 @@
 import networkx as nx
 
+
 class Truck:
     """
     卡车类

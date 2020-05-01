@@ -5,7 +5,7 @@ from typing import List
 import networkx as nx
 import numpy as np
 
-from .truck import Truck
+from modules.entity.truck import Truck
 
 
 class Network:
@@ -15,14 +15,16 @@ class Network:
     Date: 2020-04-27
     """
 
-    def __init__(self, dists: np.ndarray, trucks: List[Truck]):
+    def __init__(self, dists: np.ndarray, names: List[str], demands: List[float], trucks: List[Truck]):
         """
         :param dists: 初始化的邻接矩阵
         :param trucks: 配送网络具有的车辆列表
         """
         self.graph = nx.from_numpy_array(dists)
+        for u in self.graph:
+            self.graph.nodes[u]['name'] = names[u]
+            self.graph.nodes[u]['demand'] = demands[u]
         self.trucks = trucks
-        self.graph.add_node(0, name='配送中心')
 
     def coverage_allocate(self):
         """
@@ -44,8 +46,12 @@ class Network:
             t.subgraph = self.graph.subgraph(t.coverage)
 
         # todo 顶点分类中考虑载重上限的情况
+    def path_generate(self):
+        for t in self.trucks:
+            self.__path_generate(t)
 
-    def path_generate(self, truck: Truck):
+
+    def __path_generate(self, truck: Truck):
         """
         生成一个卡车的回路
         :param truck: 待生成回路的卡车
@@ -99,8 +105,6 @@ class Network:
                 dist_opt = dist
                 path_opt = nx.reconstruct_path(0, v, predecessors)[:-1] + path[v_map][status ^ status_v]
 
-        print(path_opt)
-        print(dist_opt)
         truck.d = dist_opt
         truck.path = path_opt
 
