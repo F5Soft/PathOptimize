@@ -43,6 +43,8 @@ class Network:
         for t in self.trucks:
             t.subgraph = self.graph.subgraph(t.coverage)
 
+        # todo 顶点分类中考虑载重上限的情况
+
     def path_generate(self, truck: Truck):
         """
         生成一个卡车的回路
@@ -56,56 +58,51 @@ class Network:
         即dp[k][v^(1<<(i-1)]表示未访问城市i的状态下，到达城市k的花费。
         时间复杂度：Floyd预处理为O(n^3)，枚举各种状态的时间复杂度为O(2^n*n^2)，总的时间复杂度即为O(2^n*n^2)
         """
+        subgraph = truck.subgraph.copy()
+        predecessors, dists = nx.floyd_warshall_predecessor_and_distance(subgraph)
+        subgraph.remove_node(0)  # 去除原图中的顶点0
 
-        predecessors, dists = nx.floyd_warshall_predecessor_and_distance(truck.subgraph)
-        n = len(truck.subgraph)
-        mapping = np.zeros(n)
+        n = len(subgraph)
+        status_max = 1 << n
+        dp = [{} for i in range(n)]  # dp[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费
+        path = [{} for i in range(n)]  # path[i][status]表示上述最小花费所走的路径
+        mapping = {u: i for i, u in enumerate(subgraph)}  # 顶点到顶点编号的映射
+        for u in subgraph:
+            dp[mapping[u]][0] = dists[u][0]  # 状态为0说明直接返回配送中心，因此距离即为当前顶点到配送中心的距离
+            path[mapping[u]][0] = nx.reconstruct_path(u, 0, predecessors)  # 并且上述距离对应的路径即为u直接到0
 
-        for i, u in enumerate(truck.subgraph):
-            mapping[i] = u
-        dp = np.zeros((n, 1 << (n - 1)))
-        path = dict()
-        for i in range(1, n):
-            u = int(mapping[i])
-            dp[i, 0] = dists[u][0]
-            path[u] = {0: u}
-        path[0] = dict()
-
-        for status in range(1 << (n - 1) - 1):
-            for i in range(1, n):
-                u = int(mapping[i])
+        for status in range(status_max):
+            for u in subgraph:
                 dist_opt = np.inf
                 path_opt = []
-                for v in truck.subgraph[u]:
-                    if v != 0 and (1 << (v - 1)) | status == status:
-                        dist = dp[v, status ^ (1 << (v - 1))] + dists[u][v]
+                for v in subgraph[u]:
+                    v_map = mapping[v]
+                    status_v = 1 << v_map
+                    if status_v | status == status:  # 如果v属于当前的状态中
+                        dist = dists[u][v] + dp[v_map][status ^ status_v]  # 那么可将v去除
                         if dist < dist_opt:
                             dist_opt = dist
-                            path_opt = nx.reconstruct_path(u, v, predecessors).pop() + path[v][status ^ (1 << (v - 1))]
+                            path_opt = nx.reconstruct_path(u, v, predecessors)[:-1] + path[v_map][status ^ status_v]
                 if not np.isinf(dist_opt):
-                    dp[i, status] = dist_opt
-                    path[u][status] = path_opt
+                    u_map = mapping[u]
+                    dp[u_map][status] = dist_opt
+                    path[u_map][status] = path_opt
 
-        i = 0
-        status = 1 << (n - 1) - 1
-        u = int(mapping[i])
+        status = status_max - 1
         dist_opt = np.inf
         path_opt = []
-        for v in truck.subgraph[u]:
-            if v != 0 and (1 << (v - 1)) | status == status:
-                dist = dp[v, status ^ (1 << (v - 1))] + dists[u][v]
-                if dist < dist_opt:
-                    dist_opt = dist
-                    path_opt = nx.reconstruct_path(u, v, predecessors) + path[v][status ^ (1 << (v - 1))]
-        if not np.isinf(dist_opt):
-            dp[i, status] = dist_opt
-            path[u][status] = path_opt
-        else:
-            raise nx.NetworkXError
-        print(dp[i, 0])
-        print(path[u][0])
+        for v in truck.subgraph[0]:
+            v_map = mapping[v]
+            status_v = 1 << v_map
+            dist = dists[0][v] + dp[v_map][status ^ status_v]
+            if dist < dist_opt:
+                dist_opt = dist
+                path_opt = nx.reconstruct_path(0, v, predecessors)[:-1] + path[v_map][status ^ status_v]
 
-        # todo TSP算法Debug
+        print(path_opt)
+        print(dist_opt)
+        truck.d = dist_opt
+        truck.path = path_opt
 
     def coverage_mutation(self, mutation_rate=1):
         """
@@ -118,4 +115,4 @@ class Network:
         pass
 
     def gexf_summary(self):
-        nx.write_gexf(self.graph, "../../static/gexf/network.gexf")
+        nx.write_gexf(self.graph, "static/gexf/test.gexf")
