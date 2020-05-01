@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div id="set_trucks" class="container">
+        <h4>配送网络配置</h4>
+        <form id="node_form" class="was-validated">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">节点名称</th>
+                    <th scope="col">所需货物重量</th>
+                    <th scope="col">操作</th>
+                <tbody class="node-body">
+                    <tr>
+                        <th scope="row">
+                            <input name="1" value="123" type="text" class="form-control form-control-sm" readonly required>
+                            <td>
+                                <input name="2" value="10" type="number" class="form-control form-control-sm" readonly required min="1">
+                            </td>
+                            <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary node_modify">修改
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success node_confirm" hidden>确定
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger del">删除
+                            </button>
+                            </td>
+                        </th>
+                    </tr>
+                </table>
+                <button id="add_node" type="button" class="btn btn-primary">添加节点</button>
+                <button id="save" type="button" class="btn btn-success">保存</button>
+                </tbody>
+                </tr>
+                </thead>
+            </table>
+        </form>
+        <br>
+        <br>
+        <form id="route_form" class="was-validated">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">起始节点</th>
+                    <th scope="col">终止节点</th>
+                    <th scope="col">距离（Km）</th>
+                    <th scope="col">操作</th>
+                <tbody class="route-body">
+                    <tr>
+                        <th scope="row">
+                            <select class="combobox form-control" disabled>
+                                <option>配送站</option>
+                                <option>A</option>
+                                <option>B</option>
+                            </select>
+                            <td>
+                                <select class="combobox form-control" disabled>
+                                    <option>配送站</option>
+                                    <option>A</option>
+                                    <option>B</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input name="2" value="110" type="number" class="form-control form-control-sm" readonly required min="1">
+                            </td>
+                            <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary route_modify">修改
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success route_confirm" hidden>确定
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger del">删除
+                            </button>
+                            </td>
+                        </th>
+                    </tr>
+                </table>
+                <button id="add_route" type="button" class="btn btn-primary">添加路径</button>
+                <button id="save" type="button" class="btn btn-success">保存</button>
+                </tbody>
+                </tr>
+                </thead>
+            </table>
+        </form>
+    </div>
+{% endblock %}
+{% block script %}
+    <script>
+        $('.node_modify').click(function () {
+            let parent = $(this).parent();
+            $(".node_modify", parent).attr("hidden", true);
+            $(".node_confirm", parent).attr("hidden", false);
+            $("input", parent.parent()).attr("readonly", false);
+        });
+        $('.route_modify').click(function () {
+            let parent = $(this).parent();
+            $(".route_modify", parent).attr("hidden", true);
+            $(".route_confirm", parent).attr("hidden", false);
+            $("input",parent.parent()).attr("readonly", false);
+            $(".combobox",parent.parent()).attr("disabled",false);
+        });
+
+        $('.node_confirm').click(function () {
+            let parent = $(this).parent();
+            let input = $("input", parent.parent());
+            for (let i = 1; i < input.length; i++) {
+                if (input.get(i).validity.valid === false) {
+                    return;
+                }
+            }
+            $(".node_confirm", parent).attr("hidden", true);
+            $(".node_modify", parent).attr("hidden", false);
+            input.attr("readonly", true);
+        });
+        $('.route_confirm').click(function () {
+            let parent = $(this).parent();
+            let input = $("input", parent.parent());
+            for (let i = 1; i < input.length; i++) {
+                if (input.get(i).validity.valid === false) {
+                    return;
+                }
+            }
+            $(".route_confirm", parent).attr("hidden", true);
+            $(".route_modify", parent).attr("hidden", false);
+            $(".combobox",parent.parent()).attr("disabled",true);
+            input.attr("readonly", true);
+        });
+        //del是共用的
+        $(".del").click(function () {
+            $(this).parent().parent().remove();
+        });
+
+        $("#add_node").click(function () {
+            let table = $(".node-body");
+            table.children(":first").clone(true).appendTo(table);
+            let self = table.children(":last");
+            $(".node_modify", self).attr("hidden", true);
+            $(".node_confirm", self).attr("hidden", false);
+            $("input", self).attr({"value": "", "readonly": false});
+        })
+        $("#add_route").click(function () {
+            let table = $(".route-body");
+            table.children(":first").clone(true).appendTo(table);
+            let self = table.children(":last");
+            $(".route_modify", self).attr("hidden", true);
+            $(".route_confirm", self).attr("hidden", false);
+            $("input", self).attr({"value": "", "readonly": false});
+            $(".combobox",self).attr("disabled",false);
+        })
+
+        //save这里我没有改动，只是把class改成了route_save和node_save
+        $("#save").click(function () {
+            let form = $("#route_form");
+            if (form.get(0).checkValidity() === true) {
+                $.ajax("{{ url_for('set_trucks') }}", {
+                    method: "POST",
+                    data: form.serialize(),
+                    success: function (data) {
+                        console.log(data);
+                    }
+                })
+                $("input", "tbody").attr("readonly", true);
+                $(".node_confirm", "tbody").attr("hidden", true);
+                $(".node_modify", "tbody").attr("hidden", false);
+                $(".route_confirm", "tbody").attr("hidden", true);
+                $(".route_modify", "tbody").attr("hidden", false);
+            }
+        })
+    </script>
+{% endblock %}
