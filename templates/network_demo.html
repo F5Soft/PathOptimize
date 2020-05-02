@@ -32,7 +32,12 @@
                 <button id="node_save" type="button" class="btn btn-success">保存</button>
                 </tbody>
                 </tr>
-                </thead>
+            </table>
+            <button id="add_node" type="button" class="btn btn-primary">添加节点</button>
+            <button id="save" type="button" class="btn btn-success">保存</button>
+            </tbody>
+            </tr>
+            </thead>
             </table>
         </form>
         <br>
@@ -74,7 +79,12 @@
                 <button id="route_save" type="button" class="btn btn-success">保存</button>
                 </tbody>
                 </tr>
-                </thead>
+            </table>
+            <button id="add_route" type="button" class="btn btn-primary">添加路径</button>
+            <button id="save" type="button" class="btn btn-success">保存</button>
+            </tbody>
+            </tr>
+            </thead>
             </table>
         </form>
     </div>
@@ -91,8 +101,8 @@
             let parent = $(this).parent();
             $(".route_modify", parent).attr("hidden", true);
             $(".route_confirm", parent).attr("hidden", false);
-            $("input",parent.parent()).attr("readonly", false);
-            $(".combobox",parent.parent()).attr("disabled",false);
+            $("input", parent.parent()).attr("readonly", false);
+            $(".combobox", parent.parent()).attr("disabled", false);
         });
 
         $('.node_confirm').click(function () {
@@ -117,7 +127,7 @@
             }
             $(".route_confirm", parent).attr("hidden", true);
             $(".route_modify", parent).attr("hidden", false);
-            $(".combobox",parent.parent()).attr("disabled",true);
+            $(".combobox", parent.parent()).attr("disabled", true);
             input.attr("readonly", true);
         });
         //del是共用的
@@ -140,7 +150,7 @@
             $(".route_modify", self).attr("hidden", true);
             $(".route_confirm", self).attr("hidden", false);
             $("input", self).attr({"value": "", "readonly": false});
-            $(".combobox",self).attr("disabled",false);
+            $(".combobox", self).attr("disabled", false);
         })
 
 

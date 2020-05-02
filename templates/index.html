@@ -1,4 +1,18 @@
 {% extends 'base.html' %}
 {% block content %}
-    <hr>
+    <div class="container">
+        <button id="apply" class="btn btn-primary">应用算法</button>
+    </div>
+{% endblock %}
+{% block script %}
+    <script>
+        $("#apply").click(function () {
+            $.ajax("{{ url_for('index') }}", {
+                method: "POST",
+                success: function (data) {
+                    console.log(data);
+                }
+            })
+        })
+    </script>
 {% endblock %}
