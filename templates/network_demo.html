@@ -11,22 +11,26 @@
                     <th scope="col">所需货物重量</th>
                     <th scope="col">操作</th>
                 <tbody class="node-body">
-                <tr>
-                    <th scope="row">
-                        <input name="1" value="123" type="text" class="form-control form-control-sm" readonly required>
-                    <td>
-                        <input name="2" value="10" type="number" class="form-control form-control-sm" readonly required
-                               min="1">
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-outline-primary node_modify">修改
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-success node_confirm" hidden>确定
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger del">删除
-                        </button>
-                    </td>
-                    </th>
+                    <tr>
+                        <th scope="row">
+                            <input name="1" value="123" type="text" class="form-control form-control-sm node_name" readonly required>
+                            <td>
+                                <input name="2" value="10" type="number" class="form-control form-control-sm" readonly required min="1">
+                            </td>
+                            <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary node_modify">修改
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success node_confirm" hidden>确定
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger del">删除
+                            </button>
+                            </td>
+                        </th>
+                    </tr>
+                </table>
+                <button id="add_node" type="button" class="btn btn-primary">添加节点</button>
+                <button id="node_save" type="button" class="btn btn-success">保存</button>
+                </tbody>
                 </tr>
             </table>
             <button id="add_node" type="button" class="btn btn-primary">添加节点</button>
@@ -47,33 +51,33 @@
                     <th scope="col">距离（Km）</th>
                     <th scope="col">操作</th>
                 <tbody class="route-body">
-                <tr>
-                    <th scope="row">
-                        <select class="combobox form-control" disabled>
-                            <option>配送站</option>
-                            <option>A</option>
-                            <option>B</option>
-                        </select>
-                    <td>
-                        <select class="combobox form-control" disabled>
-                            <option>配送站</option>
-                            <option>A</option>
-                            <option>B</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input name="2" value="110" type="number" class="form-control form-control-sm" readonly required
-                               min="1">
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-outline-primary route_modify">修改
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-success route_confirm" hidden>确定
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger del">删除
-                        </button>
-                    </td>
-                    </th>
+                    <tr>
+                        <th scope="row">
+                            <select class="combobox form-control" disabled>
+                                <option value="配送站">配送站</option>
+                            </select>
+                            <td>
+                                <select class="combobox form-control" disabled>
+                                    <option value="配送站">配送站</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input name="2" value="110" type="number" class="form-control form-control-sm" readonly required min="1">
+                            </td>
+                            <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary route_modify">修改
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success route_confirm" hidden>确定
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger del">删除
+                            </button>
+                            </td>
+                        </th>
+                    </tr>
+                </table>
+                <button id="add_route" type="button" class="btn btn-primary">添加路径</button>
+                <button id="route_save" type="button" class="btn btn-success">保存</button>
+                </tbody>
                 </tr>
             </table>
             <button id="add_route" type="button" class="btn btn-primary">添加路径</button>
@@ -149,23 +153,24 @@
             $(".combobox", self).attr("disabled", false);
         })
 
-        //save这里我没有改动，只是把class改成了route_save和node_save
-        $("#save").click(function () {
-            let form = $("#route_form");
-            if (form.get(0).checkValidity() === true) {
-                $.ajax("{{ url_for('set_trucks') }}", {
-                    method: "POST",
-                    data: form.serialize(),
-                    success: function (data) {
-                        console.log(data);
-                    }
-                })
-                $("input", "tbody").attr("readonly", true);
-                $(".node_confirm", "tbody").attr("hidden", true);
-                $(".node_modify", "tbody").attr("hidden", false);
-                $(".route_confirm", "tbody").attr("hidden", true);
-                $(".route_modify", "tbody").attr("hidden", false);
+
+        $("#node_save").click(function () {
+            $("input", ".node-body").attr("readonly", true);
+            $(".node_confirm", ".node-body").attr("hidden", true);
+            $(".node_modify", ".node-body").attr("hidden", false);
+            let input = $(".node_name");
+            $(".combobox").empty();
+            $(".combobox").append("<option value=\"配送站\">配送站</option>");
+            for(let i=0;i<input.length;i++){
+                $(".combobox").append("<option value=\""+ input[i].value + "\">" + input[i].value + "</option>");
             }
+        })
+
+        $("#route_save").click(function () {
+            $("input", ".route-body").attr("readonly", true);
+            $(".route_confirm", ".route-body").attr("hidden", true);
+            $(".route_modify", ".route-body").attr("hidden", false);
+            $(".combobox", ".route-body").attr("disabled", true);
         })
     </script>
 {% endblock %}
