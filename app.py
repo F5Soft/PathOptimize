@@ -25,7 +25,7 @@ def get_trucks():
 @app.route('/network', methods=['GET'])
 def get_network():
     """配置网络接口"""
-    return render_template("network.html")
+    return render_template("network_demo.html")
 
 
 @app.route('/trucks', methods=['POST'])

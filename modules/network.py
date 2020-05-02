@@ -1,5 +1,4 @@
-import math
-import random
+import copy
 from typing import List
 
 import networkx as nx
@@ -26,30 +25,80 @@ class Network:
             self.graph.nodes[u]['demand'] = demands[u]
         self.trucks = trucks
 
+    def __copy__(self):
+        names = [u[1]['name'] for u in self.graph.nodes(data=True)]
+        demands = [u[1]['demand'] for u in self.graph.nodes(data=True)]
+        trucks = [copy.copy(t) for t in self.trucks]
+        cp = Network(nx.to_numpy_array(self.graph), names, demands, trucks)
+        return cp
+
     def coverage_allocate(self):
         """
         分配各个卡车的配送范围
         :return: None
         """
-        trucks_len = len(self.trucks)
-        for u in self.graph:
-            if u != 0 and not math.isinf(self.graph[0][u]['weight']):
-                self.graph.nodes[u]['label'] = random.randrange(trucks_len)
-        partition = nx.algorithms.node_classification.harmonic_function(self.graph)
-        """node_classification：顶点分类，属于图神经网络的内容，可以搜相关资料写进文档，这里直接调个包"""
+        n = len(self.graph)
+        gene_added = False
+        for t in self.trucks:
+            if np.random.rand() < 0.5:
+                t.gene = np.random.randint(1, n)
+                gene_added = True
+        if not gene_added:
+            np.random.choice(self.trucks).gene = np.random.randint(1, n)
+        self.__coverage_allocate()
+
+        # todo 顶点分类中考虑载重上限的情况
+
+    def coverage_mutation(self, mutation_rate=0.1):
+        """
+        使所有卡车的基因按照给定的概率突变
+        :param mutation_rate: 突变概率
+        :return: None
+        """
+        n = len(self.graph)
+        for t in self.trucks:
+            if np.random.rand() < mutation_rate:
+                t.gene = np.random.randint(n)
+
+    def __coverage_allocate(self):
+        """
+        通过各个卡车的基因情况分配卡车的配送范围
+        :return: None
+        """
+        # 统计基因信息
+        gene_count = np.zeros(len(self.graph), np.int)
+        for t in self.trucks:
+            gene_count[t.gene] += 1
+        # 生成无配送中心的图，并将距离转为邻接程度
+        graph = self.graph.copy()
+        for u, v in graph.edges:
+            graph[u][v]['weight'] **= -1
+        # 根据基因给顶点标号
+        for i, t in enumerate(self.trucks):
+            if 'label' in graph.nodes[t.gene] and np.random.rand() < 1 / gene_count[t.gene]:
+                graph.nodes[t.gene]['label'] = i
+            else:
+                graph.nodes[t.gene]['label'] = i
+        # 根据顶点标号进行顶点分类，属于图神经网络的内容，可以搜相关资料写进文档，这里直接调个包
+        partition = nx.algorithms.node_classification.harmonic_function(graph)
+        # 更新卡车范围
         for t in self.trucks:
             t.coverage.clear()
             t.coverage.add(0)
+            t.w = 0
         for u, t in enumerate(partition):
             self.trucks[t].coverage.add(u)
+            self.trucks[t].w += self.graph.nodes[u]['demand']
         for t in self.trucks:
             t.subgraph = self.graph.subgraph(t.coverage)
 
-        # todo 顶点分类中考虑载重上限的情况
     def path_generate(self):
+        """
+        生成所有卡车在各自配送范围内的回路
+        :return: None
+        """
         for t in self.trucks:
             self.__path_generate(t)
-
 
     def __path_generate(self, truck: Truck):
         """
@@ -64,10 +113,11 @@ class Network:
         即dp[k][v^(1<<(i-1)]表示未访问城市i的状态下，到达城市k的花费。
         时间复杂度：Floyd预处理为O(n^3)，枚举各种状态的时间复杂度为O(2^n*n^2)，总的时间复杂度即为O(2^n*n^2)
         """
+        # 取子图，求Floyd
         subgraph = truck.subgraph.copy()
         predecessors, dists = nx.floyd_warshall_predecessor_and_distance(subgraph)
         subgraph.remove_node(0)  # 去除原图中的顶点0
-
+        # 初始化动态规划数组及顶点映射
         n = len(subgraph)
         status_max = 1 << n
         dp = [{} for i in range(n)]  # dp[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费
@@ -76,7 +126,7 @@ class Network:
         for u in subgraph:
             dp[mapping[u]][0] = dists[u][0]  # 状态为0说明直接返回配送中心，因此距离即为当前顶点到配送中心的距离
             path[mapping[u]][0] = nx.reconstruct_path(u, 0, predecessors)  # 并且上述距离对应的路径即为u直接到0
-
+        # 动态规划配送网点
         for status in range(status_max):
             for u in subgraph:
                 dist_opt = np.inf
@@ -93,7 +143,7 @@ class Network:
                     u_map = mapping[u]
                     dp[u_map][status] = dist_opt
                     path[u_map][status] = path_opt
-
+        # 动态规划配送中心
         status = status_max - 1
         dist_opt = np.inf
         path_opt = []
@@ -104,19 +154,23 @@ class Network:
             if dist < dist_opt:
                 dist_opt = dist
                 path_opt = nx.reconstruct_path(0, v, predecessors)[:-1] + path[v_map][status ^ status_v]
-
+        # 更新卡车路径
         truck.d = dist_opt
         truck.path = path_opt
 
-    def coverage_mutation(self, mutation_rate=1):
+    def adaptive(self):
         """
-        按照一定概率交换两个卡车的部分配送范围
-        :param mutation_rate: 交换概率
+        求该配送网络的适应度值，用于自然选择，为该网络的平均卡车适应度值
+        :return: float 适应度值
+        """
+        adaptive = np.mean([t.adaptive() for t in self.trucks])
+        return adaptive
+
+
+    def gexf_summary(self, filename: str):
+        """
+        导出图像的gexf信息，用于echarts插件读取
+        :param filename: 文件名
         :return: None
         """
-        # todo
-
-        pass
-
-    def gexf_summary(self):
-        nx.write_gexf(self.graph, "static/gexf/test.gexf")
+        nx.write_gexf(self.graph, "static/gexf/" + filename)
