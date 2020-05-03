@@ -1,3 +1,9 @@
+"""
+卡车模块
+Author: bsy
+Date: 2020-05-03
+"""
+
 import networkx as nx
 import numpy as np
 
@@ -5,10 +11,7 @@ import numpy as np
 class Truck:
     """
     卡车类
-    Author: bsy
-    Date: 2020-04-27
     """
-
     def __init__(self, name: str, d_max: float, w_max: float):
         """
         :param name: 卡车名称
@@ -27,7 +30,7 @@ class Truck:
 
     def __repr__(self):
         return "[%s] d_max=%.2f w_max=%.2f d=%.2f w=%.2f path=" % (
-            self.name, self.d_max, self.w_max, self.d, self.w) + str(self.path)
+            self.name, self.d_max, self.w_max, self.d, self.w) + str(self.path) + " coverage=" + str(self.coverage)
 
     def __copy__(self):
         cp = Truck(self.name, self.d_max, self.w_max)
@@ -42,6 +45,7 @@ class Truck:
         求单个卡车的适应度值
         :return: float 适应度值
         """
+        # todo 优化适应度函数，使之既能在越界情况下值很小，又能反映满载率
         return Truck.adaptive_function(self.w, self.w_max) + Truck.adaptive_function(self.d, self.d_max)
 
     @staticmethod
@@ -52,6 +56,7 @@ class Truck:
         :param threshold: 指标上限阈值
         :return: float 单个指标适应度值
         """
+        # todo 优化适应度函数，使之既能在越界情况下值很小，又能反映满载率
         if index > threshold:
             return -np.exp(index - threshold)
         else:

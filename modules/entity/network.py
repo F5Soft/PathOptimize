@@ -1,4 +1,11 @@
+"""
+配送网络模块
+Author: bsy, pq
+Date: 2020-05-03
+"""
+
 import copy
+import random
 from typing import List
 
 import networkx as nx
@@ -10,10 +17,7 @@ from modules.entity.truck import Truck
 class Network:
     """
     配送网络类
-    Author: bsy, pq
-    Date: 2020-04-27
     """
-
     def __init__(self, dists: np.ndarray, names: List[str], demands: List[float], trucks: List[Truck]):
         """
         :param dists: 初始化的邻接矩阵
@@ -25,6 +29,12 @@ class Network:
             self.graph.nodes[u]['demand'] = demands[u]
         self.trucks = trucks
 
+    def __repr__(self):
+        pr = ""
+        for t in self.trucks:
+            pr += str(t) + '\n'
+        return pr
+
     def __copy__(self):
         names = [u[1]['name'] for u in self.graph.nodes(data=True)]
         demands = [u[1]['demand'] for u in self.graph.nodes(data=True)]
@@ -32,21 +42,15 @@ class Network:
         cp = Network(nx.to_numpy_array(self.graph), names, demands, trucks)
         return cp
 
-    def coverage_allocate(self):
+    def coverage_init(self):
         """
-        分配各个卡车的配送范围
+        初始化网络中各个卡车的配送范围
         :return: None
         """
         n = len(self.graph)
-        gene_added = False
         for t in self.trucks:
-            if np.random.rand() < 0.5:
-                t.gene = np.random.randint(1, n)
-                gene_added = True
-        if not gene_added:
-            np.random.choice(self.trucks).gene = np.random.randint(1, n)
-        self.__coverage_allocate()
-
+            t.gene = random.randrange(1, n)
+        self.coverage_allocate()
         # todo 顶点分类中考虑载重上限的情况
 
     def coverage_mutation(self, mutation_rate=0.1):
@@ -57,10 +61,24 @@ class Network:
         """
         n = len(self.graph)
         for t in self.trucks:
-            if np.random.rand() < mutation_rate:
-                t.gene = np.random.randint(n)
+            if random.random() < mutation_rate:
+                t.gene = random.randrange(n)
 
-    def __coverage_allocate(self):
+    def coverage_recombination(self, network2):
+        """
+
+        :param network2:
+        :return:
+        """
+        n = len(self.trucks)
+        a = random.randrange(n)
+        b = random.randrange(n)
+        low = min(a, b)
+        high = max(a, b)
+        for i in range(low, high + 1):
+            self.trucks[i].gene, network2.trucks[i].gene = network2.trucks[i].gene, self.trucks[i].gene
+
+    def coverage_allocate(self):
         """
         通过各个卡车的基因情况分配卡车的配送范围
         :return: None
@@ -75,7 +93,7 @@ class Network:
             graph[u][v]['weight'] **= -1
         # 根据基因给顶点标号
         for i, t in enumerate(self.trucks):
-            if 'label' in graph.nodes[t.gene] and np.random.rand() < 1 / gene_count[t.gene]:
+            if 'label' in graph.nodes[t.gene] and random.random() < 1 / gene_count[t.gene]:
                 graph.nodes[t.gene]['label'] = i
             else:
                 graph.nodes[t.gene]['label'] = i
@@ -98,21 +116,22 @@ class Network:
         :return: None
         """
         for t in self.trucks:
-            self.__path_generate(t)
+            t.path = []
+            if len(t.coverage) > 1:
+                self.path_generate_for_truck(t)
 
-    def __path_generate(self, truck: Truck):
+    def path_generate_for_truck(self, truck: Truck):
         """
         生成一个卡车的回路
+        数学模型：dp[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费。其中状态status用二进制数来表示
+        右起第i位表示第i个城市的状态，0为未拜访，1为已拜访。设i, j为顶点映射到整数的编号，u, v为对应的真实的顶点编号，则状态转移方程为：
+        ```dp[i][status] = min(dists[u][v] + dp[i][status], dp[v][status^(1<<j)])```
+        其中v是u的所有邻接顶点，依次取值来得到最小值。dists[u][v]表示城市到城市u到v的最短路程。
+        时间复杂度：Floyd预处理为O(n^3)，枚举各种状态的时间复杂度为O(2^n*n^2)，总的时间复杂度即为O(2^n*n^2)
         :param truck: 待生成回路的卡车
         :return: None
-
-        数学模型：dp[i][v]表示在状态v下，到达城市i所用的最小花费。其中状态v用二进制数来表示
-        右起第i位表示第i个城市的状态，0为未拜访，1为已拜访。则状态转移方程为：
-            dp[i][v]=min(dp[i][v],dp[k][v^(1<<(i-1)]+dist[k][i])
-        其中k从1到n依次取值来得到最小值，dist[k][i]表示城市k到城市i的路程，^为异或运算，v^(1<<i-1)将v中第i位置0
-        即dp[k][v^(1<<(i-1)]表示未访问城市i的状态下，到达城市k的花费。
-        时间复杂度：Floyd预处理为O(n^3)，枚举各种状态的时间复杂度为O(2^n*n^2)，总的时间复杂度即为O(2^n*n^2)
         """
+        # todo 如果卡车子图顶点数较多，该算法会GG，考虑增加贪心算法求次优TSP
         # 取子图，求Floyd
         subgraph = truck.subgraph.copy()
         predecessors, dists = nx.floyd_warshall_predecessor_and_distance(subgraph)
@@ -163,9 +182,10 @@ class Network:
         求该配送网络的适应度值，用于自然选择，为该网络的平均卡车适应度值
         :return: float 适应度值
         """
-        adaptive = np.mean([t.adaptive() for t in self.trucks])
-        return adaptive
-
+        # todo 优化适应度函数，使之既能反映单个卡车的适应度，又能反映总距离d_tot
+        adaptive_mean = np.mean([t.adaptive() for t in self.trucks if len(t.coverage) > 1])  # 各个有任务的卡车适应度平均
+        d_tot = np.sum([t.d for t in self.trucks if len(t.coverage) > 1])  # 总路程
+        return adaptive_mean / d_tot
 
     def gexf_summary(self, filename: str):
         """
