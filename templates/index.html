@@ -3,6 +3,11 @@
     <div class="container">
         <button id="apply" class="btn btn-primary">应用算法</button>
     </div>
+    <hr>
+    <div class="container">
+        <h6>程序输出结果</h6>
+        <p id="result"></p>
+    </div>
 {% endblock %}
 {% block script %}
     <script>
@@ -10,6 +15,8 @@
             $.ajax("{{ url_for('index') }}", {
                 method: "POST",
                 success: function (data) {
+                    $("#result").append(data);
+                    //todo 似乎val和换行符在这里都失效了 莫名其妙 只能追加
                     console.log(data);
                 }
             })

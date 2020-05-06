@@ -90,7 +90,7 @@ def apply_algorithm():
     network_best = alg.genetic_algorithm(population, mutation_rate=0.1, recombination_rate=0.6)
     print(network_best.adaptive())
     print(network_best)
-    return "success"
+    return str(network_best)
 
 
 if __name__ == '__main__':
