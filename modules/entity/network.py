@@ -6,7 +6,7 @@ Date: 2020-05-03
 
 import copy
 import random
-from typing import List
+from typing import List, Dict
 
 import networkx as nx
 import numpy as np
@@ -18,28 +18,29 @@ class Network:
     """
     配送网络类
     """
-    def __init__(self, dists: np.ndarray, names: List[str], demands: List[float], trucks: List[Truck]):
+    def __init__(self, nodes: List, edges: List, trucks: List[Truck]):
         """
         :param dists: 初始化的邻接矩阵
         :param trucks: 配送网络具有的车辆列表
         """
-        self.graph = nx.from_numpy_array(dists)
-        for u in self.graph:
-            self.graph.nodes[u]['name'] = names[u]
-            self.graph.nodes[u]['demand'] = demands[u]
+        self.graph = nx.Graph()
+        self.graph.add_nodes_from(nodes)
+        self.graph.add_edges_from(edges)
         self.trucks = trucks
 
     def __repr__(self):
         pr = ""
+        d = 0.0
         for t in self.trucks:
             pr += str(t) + '\n'
-        return pr
+            d += t.d
+        return pr + "Total distance: %.2fkm" % d
 
     def __copy__(self):
-        names = [u[1]['name'] for u in self.graph.nodes(data=True)]
-        demands = [u[1]['demand'] for u in self.graph.nodes(data=True)]
+        nodes = self.graph.nodes(data=True)
+        edges = self.graph.edges(data=True)
         trucks = [copy.copy(t) for t in self.trucks]
-        cp = Network(nx.to_numpy_array(self.graph), names, demands, trucks)
+        cp = Network(nodes, edges, trucks)
         return cp
 
     def coverage_init(self):
@@ -51,7 +52,6 @@ class Network:
         for t in self.trucks:
             t.gene = random.randrange(1, n)
         self.coverage_allocate()
-        # todo 顶点分类中考虑载重上限的情况
 
     def coverage_mutation(self, mutation_rate=0.1):
         """
