@@ -38,7 +38,7 @@ def get_trucks():
 @app.route('/network', methods=['GET'])
 def get_network():
     """配置网络接口"""
-    return render_template("network_demo.html", nodes_data=nodes_data, edges_data=edges_data)
+    return render_template("network.html", nodes_data=nodes_data, edges_data=edges_data)
 
 
 @app.route('/trucks', methods=['POST'])
@@ -90,7 +90,13 @@ def apply_algorithm():
     network_best = alg.genetic_algorithm(population, mutation_rate=0.1, recombination_rate=0.6)
     print(network_best.adaptive())
     print(network_best)
+    network_best.gexf_summary("network.gexf")
     return str(network_best)
+
+
+@app.route('/gexf', methods=['GET'])
+def get_gexf():
+    return render_template("gexf/network.gexf")
 
 
 if __name__ == '__main__':

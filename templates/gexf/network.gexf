@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2020-05-13">
+    <creator>NetworkX 2.4</creator>
+  </meta>
+  <graph defaultedgetype="undirected" mode="static" name="">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="name" type="string" />
+      <attribute id="1" title="demand" type="string" />
+      <attribute id="2" title="truck" type="string" />
+    </attributes>
+    <nodes>
+      <node id="0" label="0">
+        <attvalues>
+          <attvalue for="0" value="配送中心" />
+          <attvalue for="1" value="1.5" />
+          <attvalue for="2" value="[[0, 4, 8, 4, 0], [0, 3, 0], [], [0, 7, 2, 1, 0], [], [0, 6, 0], [], [0, 5, 0]]" />
+        </attvalues>
+      </node>
+      <node id="1" label="1">
+        <attvalues>
+          <attvalue for="0" value="配送点1" />
+          <attvalue for="1" value="2" />
+          <attvalue for="2" value="3" />
+        </attvalues>
+      </node>
+      <node id="2" label="2">
+        <attvalues>
+          <attvalue for="0" value="配送点2" />
+          <attvalue for="1" value="1.5" />
+          <attvalue for="2" value="3" />
+        </attvalues>
+      </node>
+      <node id="3" label="3">
+        <attvalues>
+          <attvalue for="0" value="配送点3" />
+          <attvalue for="1" value="4.5" />
+          <attvalue for="2" value="1" />
+        </attvalues>
+      </node>
+      <node id="4" label="4">
+        <attvalues>
+          <attvalue for="0" value="配送点4" />
+          <attvalue for="1" value="3" />
+          <attvalue for="2" value="0" />
+        </attvalues>
+      </node>
+      <node id="5" label="5">
+        <attvalues>
+          <attvalue for="0" value="配送点5" />
+          <attvalue for="1" value="1.5" />
+          <attvalue for="2" value="7" />
+        </attvalues>
+      </node>
+      <node id="6" label="6">
+        <attvalues>
+          <attvalue for="0" value="配送点6" />
+          <attvalue for="1" value="4" />
+          <attvalue for="2" value="5" />
+        </attvalues>
+      </node>
+      <node id="7" label="7">
+        <attvalues>
+          <attvalue for="0" value="配送点7" />
+          <attvalue for="1" value="2.5" />
+          <attvalue for="2" value="3" />
+        </attvalues>
+      </node>
+      <node id="8" label="8">
+        <attvalues>
+          <attvalue for="0" value="配送点8" />
+          <attvalue for="1" value="3" />
+          <attvalue for="2" value="0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="0" target="1" id="0" weight="7.4" />
+      <edge source="0" target="3" id="1" weight="5.3" />
+      <edge source="0" target="2" id="2" weight="12.1" />
+      <edge source="0" target="4" id="3" weight="6.6" />
+      <edge source="0" target="5" id="4" weight="8.2" />
+      <edge source="0" target="6" id="5" weight="11.9" />
+      <edge source="0" target="7" id="6" weight="11.2" />
+      <edge source="0" target="8" id="7" weight="10.8" />
+      <edge source="1" target="2" id="8" weight="5.8" />
+      <edge source="1" target="3" id="9" weight="9.0" />
+      <edge source="1" target="4" id="10" weight="7.1" />
+      <edge source="1" target="5" id="11" weight="11.4" />
+      <edge source="1" target="6" id="12" weight="12.8" />
+      <edge source="1" target="7" id="13" weight="6.9" />
+      <edge source="1" target="8" id="14" weight="10.7" />
+      <edge source="2" target="3" id="15" weight="12.2" />
+      <edge source="2" target="4" id="16" weight="9.4" />
+      <edge source="2" target="5" id="17" weight="10.1" />
+      <edge source="2" target="6" id="18" weight="13.7" />
+      <edge source="2" target="7" id="19" weight="2.8" />
+      <edge source="2" target="8" id="20" weight="9.0" />
+      <edge source="3" target="4" id="21" weight="4.9" />
+      <edge source="3" target="5" id="22" weight="4.1" />
+      <edge source="3" target="6" id="23" weight="7.8" />
+      <edge source="3" target="7" id="24" weight="11.9" />
+      <edge source="3" target="8" id="25" weight="8.5" />
+      <edge source="4" target="5" id="26" weight="4.0" />
+      <edge source="4" target="6" id="27" weight="6.0" />
+      <edge source="4" target="7" id="28" weight="6.6" />
+      <edge source="4" target="8" id="29" weight="4.0" />
+      <edge source="5" target="6" id="30" weight="3.9" />
+      <edge source="5" target="7" id="31" weight="10.0" />
+      <edge source="5" target="8" id="32" weight="4.4" />
+      <edge source="6" target="7" id="33" weight="10.8" />
+      <edge source="6" target="8" id="34" weight="5.7" />
+      <edge source="7" target="8" id="35" weight="5.5" />
+    </edges>
+  </graph>
+</gexf>

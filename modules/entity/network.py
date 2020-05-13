@@ -6,12 +6,12 @@ Date: 2020-05-03
 
 import copy
 import random
-from typing import List, Dict
+from typing import List
 
 import networkx as nx
 import numpy as np
 
-from modules.entity.truck import Truck
+from .truck import Truck
 
 
 class Network:
@@ -193,4 +193,16 @@ class Network:
         :param filename: 文件名
         :return: None
         """
-        nx.write_gexf(self.graph, "static/gexf/" + filename)
+        graph = self.graph.copy()
+        paths = []
+        for i, t in enumerate(self.trucks):
+            for j in range(len(t.path) -1):
+                u = t.path[j]
+                v = t.path[j+1]
+                if u != 0:
+                    graph.nodes[u]['truck'] = str(i)
+                    graph.nodes[u]['demand'] = str(graph.nodes[u]['demand'])
+            paths.append(t.path)
+        graph.nodes[0]['truck'] = str(paths)
+        graph.nodes[0]['demand'] = str(graph.nodes[u]['demand'])
+        nx.write_gexf(graph, "templates/gexf/" + filename)
