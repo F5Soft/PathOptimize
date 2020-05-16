@@ -143,40 +143,37 @@ class Network:
         # 初始化动态规划数组及顶点映射
         n = len(subgraph)
         status_max = 1 << n
-        d = [{} for i in range(n)]  # d[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费
-        path = [{} for i in range(n)]  # path[i][status]表示上述最小花费所走的路径
+        d = {u: {} for u in subgraph}  # d[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费
+        path = {u: {} for u in subgraph}  # path[i][status]表示上述最小花费所走的路径
         mapping = {u: i for i, u in enumerate(subgraph)}  # 顶点到顶点编号的映射（因为子图的顶点并不是从0开始连续增1）
         for u in subgraph:
-            d[mapping[u]][0] = dists[u][0]  # 状态为0说明直接返回配送中心，因此距离即为当前顶点到配送中心的距离
-            path[mapping[u]][0] = nx.reconstruct_path(u, 0, predecessors)  # 并且上述距离对应的路径即为u直接到0
+            d[u][0] = dists[u][0]  # 状态为0说明直接返回配送中心，因此距离即为当前顶点到配送中心的距离
+            path[u][0] = nx.reconstruct_path(u, 0, predecessors)  # 并且上述距离对应的路径即为u直接到0
         # 动态规划配送网点
         for status in range(1, status_max - 1):
             for u in subgraph:
                 dist_opt = np.inf
                 path_opt = []
                 for v in subgraph[u]:
-                    v_map = mapping[v]
-                    status_v = 1 << v_map
+                    status_v = 1 << mapping[v]
                     if status_v | status == status:  # 如果v属于当前的状态中
-                        dist = dists[u][v] + d[v_map][status ^ status_v]  # 那么可将v去除
+                        dist = dists[u][v] + d[v][status ^ status_v]  # 那么可将v去除
                         if dist < dist_opt:
                             dist_opt = dist
-                            path_opt = nx.reconstruct_path(u, v, predecessors)[:-1] + path[v_map][status ^ status_v]
+                            path_opt = nx.reconstruct_path(u, v, predecessors)[:-1] + path[v][status ^ status_v]
                 if not np.isinf(dist_opt):
-                    u_map = mapping[u]
-                    d[u_map][status] = dist_opt
-                    path[u_map][status] = path_opt
+                    d[u][status] = dist_opt
+                    path[u][status] = path_opt
         # 动态规划配送中心
         status = status_max - 1
         dist_opt = np.inf
         path_opt = []
         for v in truck.subgraph[0]:
-            v_map = mapping[v]
-            status_v = 1 << v_map
-            dist = dists[0][v] + d[v_map][status ^ status_v]
+            status_v = 1 << mapping[v]
+            dist = dists[0][v] + d[v][status ^ status_v]
             if dist < dist_opt:
                 dist_opt = dist
-                path_opt = nx.reconstruct_path(0, v, predecessors)[:-1] + path[v_map][status ^ status_v]
+                path_opt = nx.reconstruct_path(0, v, predecessors)[:-1] + path[v][status ^ status_v]
         # 更新卡车路径
         truck.d = dist_opt
         truck.path = path_opt

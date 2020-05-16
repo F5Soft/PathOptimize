@@ -26,7 +26,11 @@ edges_data = [(0, 1, {'weight': 7.4}), (0, 3, {'weight': 5.3}), (0, 2, {'weight'
 @app.route('/', methods=['GET'])
 def index():
     """主页"""
-    return render_template("index.html")
+    categories = []
+    for t in trucks_data:
+        for i in range(t[1]):
+            categories.append(t[0] + str((i + 1)))
+    return render_template("index.html", categories=categories)
 
 
 @app.route('/trucks', methods=['GET'])

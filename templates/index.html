@@ -7,86 +7,88 @@
     <div id="echart" style="width: 95%; height: 600px; margin: auto;"></div>
     <div class="container">
         <h6>程序输出结果</h6>
-        <p id="result"></p>
+        <div id="result"></div>
     </div>
 {% endblock %}
 {% block script %}
     <script src="{{ url_for('static', filename = 'js/echarts.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'js/dataTool.min.js') }}"></script>
     <script>
+        $(document).ready(set_echarts);
+
         $("#apply").click(function () {
             $.ajax("{{ url_for('index') }}", {
                 method: "POST",
                 success: function (data) {
-                    $("#result").append(data);
-                    console.log(data);
+                    $("#result").html("<pre>" + data + "</pre>");
+                    set_echarts();
                 }
             })
         });
 
-        let chart = echarts.init($("#echart").get(0));
-        chart.showLoading();
-        $.get("{{ url_for('get_gexf') }}",
-            function (xml) {
-                chart.hideLoading();
-                let graph = echarts.dataTool.gexf.parse(xml);
-                let paths = eval(graph.nodes[0].attributes[2]);
-                let categories = new Array(paths.length + 1);
-                for (let i = 1; i < categories.length; i++) {
-                    categories[i] = {name: "车辆" + i};
-                }
-                categories[0] = {name: "配送中心"};
-                let total_demand = 0;
-                for (let i = 1; i < graph.nodes.length; i++) {
-                    graph.nodes[i].name = graph.nodes[i].attributes[0];
-                    graph.nodes[i].symbolSize = parseInt(graph.nodes[i].attributes[1]) * 5;
-                    graph.nodes[i].category = parseInt(graph.nodes[i].attributes[2]) + 1;
-                    total_demand += graph.nodes[i].symbolSize * graph.nodes[i].symbolSize;
-                }
-                graph.nodes[0].name = "配送中心";
-                graph.nodes[0].symbolSize = Math.sqrt(total_demand);
-                graph.nodes[0].category = 0;
-                let edges = new Array(paths.length + 1);
-                for (let i = 0; i < edges.length; i++) {
-                    edges[i] = new Array(paths.length + 1);
-                }
-                for (let i = 0; i < graph.links.length; i++) {
-                    let source = parseInt(graph.links[i].source);
-                    let target = parseInt(graph.links[i].target);
-                    edges[source][target] = graph.links[i];
-                    edges[target][source] = graph.links[i];
-                    edges[source][target].lineStyle = {color: 'rgba(0, 0, 0, 0)', width: 0};
-                }
-                for (let i = 0; i < paths.length; i++) {
-                    for (let j = 0; j < paths[i].length - 1; j++) {
-                        edges[paths[i][j]][paths[i][j + 1]].lineStyle = {color: 'target', width: 8};
+        function set_echarts() {
+            let chart = echarts.init($("#echart").get(0));
+            chart.showLoading();
+            $.get("{{ url_for('get_gexf') }}",
+                function (xml) {
+                    chart.hideLoading();
+                    let graph = echarts.dataTool.gexf.parse(xml);
+                    let paths = eval(graph.nodes[0].attributes[2]);
+                    let categories = [];
+                    categories[0] = {name: "配送中心"};
+                    {% for c in categories %}
+                        categories.push({name: "{{c}}"});
+                    {% endfor %}
+                    let total_demand = 0;
+                    for (let i = 1; i < graph.nodes.length; i++) {
+                        graph.nodes[i].name = graph.nodes[i].attributes[0];
+                        graph.nodes[i].symbolSize = parseInt(graph.nodes[i].attributes[1]) * 5;
+                        graph.nodes[i].category = parseInt(graph.nodes[i].attributes[2]) + 1;
+                        total_demand += graph.nodes[i].symbolSize * graph.nodes[i].symbolSize;
                     }
-                }
-                let option = {
-                    legend: [{
-                        data: categories.map(function (a) {
-                            return a.name;
-                        })
-                    }],
-                    series: [
-                        {
-                            type: 'graph',
-                            layout: 'force',
-
-                            data: graph.nodes,
-                            links: graph.links,
-                            categories: categories,
-                            roam: true,
-                            draggable: true,
-                            force: {
-                                repulsion: 0,
-                                edgeLength: [50, 400]
-                            }
+                    graph.nodes[0].name = "配送中心";
+                    graph.nodes[0].symbolSize = Math.sqrt(total_demand);
+                    graph.nodes[0].category = 0;
+                    let edges = new Array(paths.length + 1);
+                    for (let i = 0; i < edges.length; i++) {
+                        edges[i] = new Array(paths.length + 1);
+                    }
+                    for (let i = 0; i < graph.links.length; i++) {
+                        let source = parseInt(graph.links[i].source);
+                        let target = parseInt(graph.links[i].target);
+                        edges[source][target] = graph.links[i];
+                        edges[target][source] = graph.links[i];
+                    }
+                    for (let i = 0; i < paths.length; i++) {
+                        for (let j = 0; j < paths[i].length - 1; j++) {
+                            edges[paths[i][j]][paths[i][j + 1]].lineStyle = {color: 'target', width: 8};
                         }
-                    ]
-                };
-                chart.setOption(option);
-            }, "xml"
-        );
+                    }
+                    let option = {
+                        legend: [{
+                            data: categories.map(function (a) {
+                                return a.name;
+                            })
+                        }],
+                        series: [
+                            {
+                                type: 'graph',
+                                layout: 'force',
+                                data: graph.nodes,
+                                links: graph.links,
+                                categories: categories,
+                                roam: true,
+                                draggable: true,
+                                force: {
+                                    repulsion: 0,
+                                    edgeLength: [50, 400]
+                                }
+                            }
+                        ]
+                    };
+                    chart.setOption(option);
+                }, "xml"
+            );
+        }
     </script>
 {% endblock %}
