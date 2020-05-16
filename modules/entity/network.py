@@ -18,6 +18,7 @@ class Network:
     """
     配送网络类
     """
+
     def __init__(self, nodes: List, edges: List, trucks: List[Truck]):
         """
         :param dists: 初始化的邻接矩阵
@@ -117,21 +118,24 @@ class Network:
         """
         for t in self.trucks:
             t.path = []
-            if len(t.coverage) > 1:
-                self.path_generate_for_truck(t)
+            n = len(t.coverage)
+            if n > 1:
+                if n < 8:
+                    self.path_generate_for_truck_tsp(t)
+                else:
+                    self.path_generate_for_truck_greedy(t)
 
-    def path_generate_for_truck(self, truck: Truck):
+    def path_generate_for_truck_tsp(self, truck: Truck):
         """
         生成一个卡车的回路
-        数学模型：dp[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费。其中状态status用二进制数来表示
+        数学模型：d[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费。其中状态status用二进制数来表示
         右起第i位表示第i个城市的状态，0为未拜访，1为已拜访。设i, j为顶点映射到整数的编号，u, v为对应的真实的顶点编号，则状态转移方程为：
-        ```dp[i][status] = min(dists[u][v] + dp[i][status], dp[v][status^(1<<j)])```
+        ```d[i][status] = min(dists[u][v] + d[j][status^(1<<j)]) for j=0 to n-1```
         其中v是u的所有邻接顶点，依次取值来得到最小值。dists[u][v]表示城市到城市u到v的最短路程。
         时间复杂度：Floyd预处理为O(n^3)，枚举各种状态的时间复杂度为O(2^n*n^2)，总的时间复杂度即为O(2^n*n^2)
         :param truck: 待生成回路的卡车
         :return: None
         """
-        # todo 如果卡车子图顶点数较多，该算法会GG，考虑增加贪心算法求次优TSP
         # 取子图，求Floyd
         subgraph = truck.subgraph.copy()
         predecessors, dists = nx.floyd_warshall_predecessor_and_distance(subgraph)
@@ -139,14 +143,14 @@ class Network:
         # 初始化动态规划数组及顶点映射
         n = len(subgraph)
         status_max = 1 << n
-        dp = [{} for i in range(n)]  # dp[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费
+        d = [{} for i in range(n)]  # d[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费
         path = [{} for i in range(n)]  # path[i][status]表示上述最小花费所走的路径
-        mapping = {u: i for i, u in enumerate(subgraph)}  # 顶点到顶点编号的映射
+        mapping = {u: i for i, u in enumerate(subgraph)}  # 顶点到顶点编号的映射（因为子图的顶点并不是从0开始连续增1）
         for u in subgraph:
-            dp[mapping[u]][0] = dists[u][0]  # 状态为0说明直接返回配送中心，因此距离即为当前顶点到配送中心的距离
+            d[mapping[u]][0] = dists[u][0]  # 状态为0说明直接返回配送中心，因此距离即为当前顶点到配送中心的距离
             path[mapping[u]][0] = nx.reconstruct_path(u, 0, predecessors)  # 并且上述距离对应的路径即为u直接到0
         # 动态规划配送网点
-        for status in range(status_max):
+        for status in range(1, status_max - 1):
             for u in subgraph:
                 dist_opt = np.inf
                 path_opt = []
@@ -154,13 +158,13 @@ class Network:
                     v_map = mapping[v]
                     status_v = 1 << v_map
                     if status_v | status == status:  # 如果v属于当前的状态中
-                        dist = dists[u][v] + dp[v_map][status ^ status_v]  # 那么可将v去除
+                        dist = dists[u][v] + d[v_map][status ^ status_v]  # 那么可将v去除
                         if dist < dist_opt:
                             dist_opt = dist
                             path_opt = nx.reconstruct_path(u, v, predecessors)[:-1] + path[v_map][status ^ status_v]
                 if not np.isinf(dist_opt):
                     u_map = mapping[u]
-                    dp[u_map][status] = dist_opt
+                    d[u_map][status] = dist_opt
                     path[u_map][status] = path_opt
         # 动态规划配送中心
         status = status_max - 1
@@ -169,13 +173,43 @@ class Network:
         for v in truck.subgraph[0]:
             v_map = mapping[v]
             status_v = 1 << v_map
-            dist = dists[0][v] + dp[v_map][status ^ status_v]
+            dist = dists[0][v] + d[v_map][status ^ status_v]
             if dist < dist_opt:
                 dist_opt = dist
                 path_opt = nx.reconstruct_path(0, v, predecessors)[:-1] + path[v_map][status ^ status_v]
         # 更新卡车路径
         truck.d = dist_opt
         truck.path = path_opt
+
+    def path_generate_for_truck_greedy(self, truck: Truck):
+        """
+        通过贪心算法，生成一个卡车的次优回路，时间复杂度为O(n^2)
+        :param truck: 待生成回路的卡车
+        :return: None
+        """
+        # Floyd预处理
+        subgraph = truck.subgraph
+        predecessors, dists = nx.floyd_warshall_predecessor_and_distance(subgraph)
+        d = 0
+        path = []
+        visited = {u: False for u in subgraph}
+        visited[0] = True
+        # 从配送中心出发开始贪心
+        u = 0
+        for i in range(len(subgraph) - 1):
+            v_opt = 0
+            dist_opt = np.inf
+            for v in subgraph:
+                if not visited[v] and dists[u][v] < dist_opt:
+                    v_opt = v
+                    dist_opt = dists[u][v]
+            visited[v_opt] = True
+            d += dists[u][v_opt]
+            path += nx.reconstruct_path(u, v_opt, predecessors)[:-1]
+            u = v_opt
+        # 更新卡车路径
+        truck.d = d + dists[u][0]
+        truck.path = path + [u, 0]
 
     def adaptive(self):
         """
@@ -196,13 +230,13 @@ class Network:
         graph = self.graph.copy()
         paths = []
         for i, t in enumerate(self.trucks):
-            for j in range(len(t.path) -1):
+            for j in range(len(t.path) - 1):
                 u = t.path[j]
-                v = t.path[j+1]
+                v = t.path[j + 1]
                 if u != 0:
                     graph.nodes[u]['truck'] = str(i)
                     graph.nodes[u]['demand'] = str(graph.nodes[u]['demand'])
             paths.append(t.path)
         graph.nodes[0]['truck'] = str(paths)
-        graph.nodes[0]['demand'] = str(graph.nodes[u]['demand'])
+        graph.nodes[0]['demand'] = str(graph.nodes[0]['demand'])
         nx.write_gexf(graph, "templates/gexf/" + filename)
