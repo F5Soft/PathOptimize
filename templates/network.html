@@ -6,6 +6,12 @@
         <button id="import_csv" type="button" class="btn btn-primary" style="margin-top:20px; margin-bottom: 20px">
             导入CSV文件
         </button>
+        <hr>
+        <h5>当前物流网络预览</h5>
+        <div id="echart" style="width: 95%; height: 400px; margin: auto;"></div>
+        <hr>
+        <h5>顶点配置</h5>
+        <br>
         <form id="node_form" class="was-validated">
             <table class="table table-bordered">
                 <thead class="thead-light">
@@ -41,7 +47,8 @@
             <button id="node_add" type="button" class="btn btn-primary">添加节点</button>
             <button id="node_save" type="button" class="btn btn-success">保存</button>
         </form>
-        <br>
+        <hr>
+        <<h5>边配置</h5>
         <br>
         <form id="edge_form" class="was-validated">
             <table class="table table-bordered">
@@ -100,6 +107,7 @@
     </div>
 {% endblock %}
 {% block script %}
+    {% include 'echarts.html' %}
     <script>
         $('.node_modify').click(function () {
             let parent = $(this).parent();
