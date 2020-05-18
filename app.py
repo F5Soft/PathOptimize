@@ -36,6 +36,7 @@ try:
     f = open("data/edges.dat", 'rb')
     edges_data = pickle.load(f)
     f.close()
+    print("[NOTE] 使用已保存的边信息")
 except FileNotFoundError:
     edges_data = [(0, 1, {'weight': 7.4}), (0, 3, {'weight': 5.3}), (0, 2, {'weight': 12.1}), (0, 4, {'weight': 6.6}),
                   (0, 5, {'weight': 8.2}), (0, 6, {'weight': 11.9}), (0, 7, {'weight': 11.2}), (0, 8, {'weight': 10.8}),
@@ -152,6 +153,10 @@ def set_network_edges():
 
 @app.route('/network/csv', methods=['POST'])
 def set_network_csv():
+    """
+    读取上传的csv文件，生成网络
+    :return: None
+    """
     global nodes_data, edges_data
     csv = request.files.get('csv')
     data = csv.read().decode()

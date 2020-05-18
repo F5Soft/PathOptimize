@@ -5,20 +5,22 @@
 
     $(document).ready(function () {
         chart = echarts.init($("#echart").get(0));
-        set_echarts();
+        get_echarts();
     });
 
     $(window).resize(function () {
         chart.resize();
     });
 
-    function set_echarts() {
+    function get_echarts() {
         {% if categories %}
-            $.get("{{ url_for('get_gexf') }}",
+            $.get("{{ url_for('get_gexf') }}", set_echarts, "xml");
         {% else %}
-            $.get("{{ url_for('get_gexf', raw='true') }}",
+            $.get("{{ url_for('get_gexf', raw='true') }}", set_echarts, "xml");
         {% endif %}
-    function (xml) {
+    }
+
+    function set_echarts(xml) {
         chart.hideLoading();
         let graph = echarts.dataTool.gexf.parse(xml);
         let paths = eval(graph.nodes[0].attributes[2]);
@@ -38,7 +40,7 @@
             {% endif %}
             total_demand += graph.nodes[i].symbolSize * graph.nodes[i].symbolSize;
         }
-        graph.nodes[0].name = "配送中心";
+        graph.nodes[0].name = "物流中心";
         graph.nodes[0].symbolSize = Math.sqrt(total_demand);
         {% if categories %}
             graph.nodes[0].category = 0;
@@ -85,7 +87,5 @@
             ]
         };
         chart.setOption(option);
-    }, "xml"
-    );
     }
 </script>

@@ -10,6 +10,9 @@ class Truck:
     """
     车辆类
     """
+
+    path_of_coverage = dict()  # 配送范围对应路径和路径长度的映射
+
     def __init__(self, name: str, d_max: float, w_max: float):
         """
         :param name: 车辆名称
@@ -37,6 +40,16 @@ class Truck:
         cp.coverage = self.coverage.copy()
         cp.path = self.path.copy()
         return cp
+
+    def coverage_hash(self) -> int:
+        """
+        生成单个车辆配送范围的哈希值，即从有限个元素的set转为二进制表示的int
+        :return: int 哈希值
+        """
+        hsh = 0
+        for u in self.coverage:
+            hsh += 1 << u
+        return hsh
 
     def adaptive(self) -> float:
         """

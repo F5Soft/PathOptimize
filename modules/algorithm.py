@@ -9,7 +9,8 @@ from typing import List
 
 import numpy as np
 
-from modules.entity.network import Network
+from .entity.truck import Truck
+from .entity.network import Network
 
 
 def population_init(initial_network: Network, population_size=1) -> List[Network]:
@@ -72,7 +73,7 @@ def genetic_algorithm(population, iteration=10, mutation_rate=0.1, recombination
     :param recombination_rate: 重组概率
     :return: Network 整个过程中的适应度最高的网络
     """
-    time_start = time.time()
+    Truck.path_of_coverage.clear() # 清除之前的结果表
     network_best = population[0]
     while iteration > 0:
         natural_selection(population)

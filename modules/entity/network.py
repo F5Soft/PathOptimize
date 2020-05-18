@@ -116,13 +116,22 @@ class Network:
         :return: None
         """
         for t in self.trucks:
-            t.path = []
-            n = len(t.coverage)
-            if n > 1:
-                if n < 8:
+            hsh = t.coverage_hash()
+            # 检查该范围下的路径是否已被计算，降低复杂度
+            if hsh in Truck.path_of_coverage:
+                t.path, t.d = Truck.path_of_coverage[hsh]
+            else:
+                n = len(t.coverage)
+                if n == 1:
+                    t.path = []
+                    t.d = 0
+                # n < 10 时，使用动态规划法生成路径
+                elif n < 10:
                     self.path_generate_for_truck_tsp(t)
+                # n >= 10 时，使用贪心算法生成路径
                 else:
                     self.path_generate_for_truck_greedy(t)
+                Truck.path_of_coverage[hsh] = t.path, t.d
 
     def path_generate_for_truck_tsp(self, truck: Truck):
         """
