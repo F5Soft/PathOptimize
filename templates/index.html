@@ -14,9 +14,15 @@
     <script src="{{ url_for('static', filename = 'js/echarts.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'js/dataTool.min.js') }}"></script>
     <script>
-        $(document).ready(set_echarts);
+        let chart;
+
+        $(document).ready(function () {
+            chart = echarts.init($("#echart").get(0));
+            set_echarts();
+        });
 
         $("#apply").click(function () {
+            chart.showLoading();
             $.ajax("{{ url_for('index') }}", {
                 method: "POST",
                 success: function (data) {
@@ -26,9 +32,11 @@
             })
         });
 
+        $(window).resize(function () {
+            chart.resize();
+        });
+
         function set_echarts() {
-            let chart = echarts.init($("#echart").get(0));
-            chart.showLoading();
             $.get("{{ url_for('get_gexf') }}",
                 function (xml) {
                     chart.hideLoading();
@@ -43,15 +51,15 @@
                     for (let i = 1; i < graph.nodes.length; i++) {
                         graph.nodes[i].name = graph.nodes[i].attributes[0];
                         graph.nodes[i].symbolSize = parseInt(graph.nodes[i].attributes[1]) * 5;
-                        graph.nodes[i].category = parseInt(graph.nodes[i].attributes[2]) + 1;
+                        graph.nodes[i].category = parseInt(graph.nodes[i].attributes[2]);
                         total_demand += graph.nodes[i].symbolSize * graph.nodes[i].symbolSize;
                     }
                     graph.nodes[0].name = "配送中心";
                     graph.nodes[0].symbolSize = Math.sqrt(total_demand);
                     graph.nodes[0].category = 0;
-                    let edges = new Array(paths.length + 1);
+                    let edges = new Array(graph.nodes.length);
                     for (let i = 0; i < edges.length; i++) {
-                        edges[i] = new Array(paths.length + 1);
+                        edges[i] = new Array(graph.nodes.length);
                     }
                     for (let i = 0; i < graph.links.length; i++) {
                         let source = parseInt(graph.links[i].source);

@@ -2,7 +2,7 @@
 
 {% block content %}
     <div id="set_trucks" class="container">
-        <h4>车辆配置</h4>
+        <h4>物流车辆配置</h4>
         <form id="trucks_form" class="was-validated">
             <table class="table table-bordered">
                 <thead class="thead-light">
@@ -92,7 +92,7 @@
                 $("input", "tbody").attr("readonly", true);
                 $(".confirm", "tbody").attr("hidden", true);
                 $(".modify", "tbody").attr("hidden", false);*/
-                location.reload();
+                window.location.reload();
             }
         });
     </script>

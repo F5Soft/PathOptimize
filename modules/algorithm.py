@@ -1,19 +1,18 @@
 """
 遗传算法模块
-Author: bsy
-Date: 2020-03-05
 """
 
 import copy
-import time
 import random
+import time
+from typing import List
 
 import numpy as np
 
 from modules.entity.network import Network
 
 
-def population_init(initial_network: Network, population_size=1):
+def population_init(initial_network: Network, population_size=1) -> List[Network]:
     """
     初始化网络种群
     :param initial_network: 初始化基于的原始网络（即未生成车辆范围和路径的网络）
@@ -56,7 +55,7 @@ def gene_recombination(population, recombination_rate=0.1):
     网络种群中部分个体之间基因相互重组
     :param population: 网络种群
     :param recombination_rate: 单个网络与其他随机一个网络发生部分基因交换的概率
-    :return:
+    :return: None
     """
     n = len(population)
     for p in population:
@@ -64,9 +63,9 @@ def gene_recombination(population, recombination_rate=0.1):
             p.coverage_recombination(population[random.randrange(n)])
 
 
-def genetic_algorithm(population, iteration=10, mutation_rate=0.1, recombination_rate=0.1):
+def genetic_algorithm(population, iteration=10, mutation_rate=0.1, recombination_rate=0.1) -> Network:
     """
-    遗传算法
+    执行遗传算法
     :param population: 网络种群
     :param iteration: 迭代次数
     :param mutation_rate: 突变概率

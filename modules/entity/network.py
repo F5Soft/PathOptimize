@@ -1,7 +1,5 @@
 """
 配送网络模块
-Author: bsy, pq
-Date: 2020-05-03
 """
 
 import copy
@@ -21,7 +19,8 @@ class Network:
 
     def __init__(self, nodes: List, edges: List, trucks: List[Truck]):
         """
-        :param dists: 初始化的邻接矩阵
+        :param nodes: 初始化的网络节点
+        :param edges: 初始化的网络边
         :param trucks: 配送网络具有的车辆列表
         """
         self.graph = nx.Graph()
@@ -69,7 +68,7 @@ class Network:
         """
 
         :param network2:
-        :return:
+        :return: None
         """
         n = len(self.trucks)
         a = random.randrange(n)
@@ -208,7 +207,7 @@ class Network:
         truck.d = d + dists[u][0]
         truck.path = path + [u, 0]
 
-    def adaptive(self):
+    def adaptive(self) -> float:
         """
         求该配送网络的适应度值，用于自然选择，为该网络的平均卡车适应度值
         :return: float 适应度值

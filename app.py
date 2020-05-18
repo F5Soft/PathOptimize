@@ -1,3 +1,5 @@
+import pickle
+
 from flask import *
 
 from modules import algorithm as alg
@@ -6,12 +8,12 @@ from modules.entity import Truck
 
 app = Flask(__name__)
 
-trucks_data = [("顺丰快递车", 8, 50, 8)]  # 默认有1种卡车，距离上限50km，载重上限8t，共8辆
-nodes_data = [(0, {'name': '配送中心', 'demand': 0}), (1, {'name': '配送点1', 'demand': 2}),
+trucks_data = [("物流车辆", 4, 50.0, 12.0)]  # 默认有1种车辆，距离上限50km，载重上限8t，共8辆
+nodes_data = [(0, {'name': '配送中心', 'demand': 0.0}), (1, {'name': '配送点1', 'demand': 2.0}),
               (2, {'name': '配送点2', 'demand': 1.5}), (3, {'name': '配送点3', 'demand': 4.5}),
-              (4, {'name': '配送点4', 'demand': 3}), (5, {'name': '配送点5', 'demand': 1.5}),
-              (6, {'name': '配送点6', 'demand': 4}), (7, {'name': '配送点7', 'demand': 2.5}),
-              (8, {'name': '配送点8', 'demand': 3})]
+              (4, {'name': '配送点4', 'demand': 3.0}), (5, {'name': '配送点5', 'demand': 1.5}),
+              (6, {'name': '配送点6', 'demand': 4.0}), (7, {'name': '配送点7', 'demand': 2.5}),
+              (8, {'name': '配送点8', 'demand': 3.0})]
 edges_data = [(0, 1, {'weight': 7.4}), (0, 3, {'weight': 5.3}), (0, 2, {'weight': 12.1}), (0, 4, {'weight': 6.6}),
               (0, 5, {'weight': 8.2}), (0, 6, {'weight': 11.9}), (0, 7, {'weight': 11.2}), (0, 8, {'weight': 10.8}),
               (1, 2, {'weight': 5.8}), (1, 3, {'weight': 9.0}), (1, 4, {'weight': 7.1}), (1, 5, {'weight': 11.4}),
@@ -21,6 +23,17 @@ edges_data = [(0, 1, {'weight': 7.4}), (0, 3, {'weight': 5.3}), (0, 2, {'weight'
               (3, 7, {'weight': 11.9}), (3, 8, {'weight': 8.5}), (4, 5, {'weight': 4.0}), (4, 6, {'weight': 6.0}),
               (4, 7, {'weight': 6.6}), (4, 8, {'weight': 4.0}), (5, 6, {'weight': 3.9}), (5, 7, {'weight': 10.0}),
               (5, 8, {'weight': 4.4}), (6, 7, {'weight': 10.8}), (6, 8, {'weight': 5.7}), (7, 8, {'weight': 5.5})]
+
+# 尝试打开数据文件，如果不存在，则使用上文的默认数据
+with open("data/trucks.dat", 'rb') as f:
+    trucks_data = pickle.load(f)
+    print("[NOTE] 使用已保存的车辆信息")
+with open("data/nodes.dat", 'rb') as f:
+    nodes_data = pickle.load(f)
+    print("[NOTE] 使用已保存的顶点信息")
+with open("data/edges.dat", 'rb') as f:
+    edges_data = pickle.load(f)
+    print("[NOTE] 使用已保存的边信息")
 
 
 @app.route('/', methods=['GET'])
@@ -39,8 +52,8 @@ def index():
 @app.route('/trucks', methods=['GET'])
 def get_trucks():
     """
-    获取卡车配置页面
-    :return: 渲染后的卡车配置页面
+    获取车辆配置页面
+    :return: 渲染后的车辆配置页面
     """
     global trucks_data
     return render_template("trucks.html", trucks_data=trucks_data)
@@ -58,7 +71,7 @@ def get_network():
 @app.route('/trucks', methods=['POST'])
 def set_trucks():
     """
-    卡车配置接口
+    车辆配置接口
     :return: 如果配置成功，返回success，否则返回fail
     """
     global trucks_data
@@ -68,7 +81,10 @@ def set_trucks():
     w_maxs = request.form.getlist('w_max[]')
     n = len(names)
     trucks_data = [(names[i], int(nums[i]), float(d_maxs[i]), float(w_maxs[i])) for i in range(n)]
-    print(trucks_data)
+    # 写入本地数据文件
+    with open("data/trucks.dat", 'wb') as f:
+        pickle.dump(trucks_data, f)
+    print("[NOTE] 车辆信息被修改:", trucks_data)
     return "success"
 
 
@@ -83,7 +99,10 @@ def set_network_nodes():
     demands = request.form.getlist('demand[]')
     n = len(names)
     nodes_data = [(i, {'name': names[i], 'demand': float(demands[i])}) for i in range(n)]
-    print(nodes_data)
+    # 写入本地数据文件
+    with open("data/nodes.dat", 'wb') as f:
+        pickle.dump(nodes_data, f)
+    print("[NOTE] 顶点信息被修改:", nodes_data)
     return "success"
 
 
@@ -99,7 +118,10 @@ def set_network_edges():
     weights = request.form.getlist('weight[]')
     n = len(weights)
     edges_data = [(int(u[i]), int(v[i]), {'weight': float(weights[i])}) for i in range(n)]
-    print(edges_data)
+    # 写入本地数据文件
+    with open("data/edges.dat", 'wb') as f:
+        pickle.dump(edges_data, f)
+    print("[NOTE] 边信息被修改:", edges_data)
     return "success"
 
 
@@ -110,7 +132,8 @@ def apply_algorithm():
     :return: 线路优化算法的输出结果
     """
     global trucks_data
-    # 生成初始卡车列表
+    print("[NOTE] 开始执行优化算法")
+    # 生成初始车辆列表
     trucks_initial = []
     for t in trucks_data:
         for i in range(int(t[1])):
@@ -121,7 +144,7 @@ def apply_algorithm():
     # todo 调整遗传算法参数：种群数，突变率等，让算法收敛的快些
     population = alg.population_init(network_initial, 10)
     network_best = alg.genetic_algorithm(population, mutation_rate=0.1, recombination_rate=0.6)
-    print(network_best.adaptive())
+    print("[NOTE] 算法输出结果:")
     print(network_best)
     network_best.gexf_summary("network.gexf")
     return str(network_best)

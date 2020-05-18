@@ -2,9 +2,9 @@
 
 {% block content %}
     <div id="set_trucks" class="container">
-        <h4>配送网络配置</h4>
+        <h4>物流网络配置</h4>
         <button id="import_csv" type="button" class="btn btn-primary" style="margin-top:20px; margin-bottom: 20px">
-            导入CSV文件（待实现）
+            导入CSV文件
         </button>
         <form id="node_form" class="was-validated">
             <table class="table table-bordered">
@@ -186,7 +186,7 @@
                 $("input", ".node_tbody").attr("readonly", true);
                 $(".node_confirm", ".node_tbody").attr("hidden", true);
                 $(".node_modify", ".node_tbody").attr("hidden", false);*/
-                location.reload();
+                window.location.reload();
             }
         });
 
@@ -205,7 +205,7 @@
                 $(".edge_confirm", ".edge_tbody").attr("hidden", true);
                 $(".edge_modify", ".edge_tbody").attr("hidden", false);
                 $("select", ".edge_tbody").attr("readonly", true);*/
-                location.reload();
+                window.location.reload();
             }
         });
     </script>
