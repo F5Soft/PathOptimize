@@ -25,7 +25,10 @@ edges_data = [(0, 1, {'weight': 7.4}), (0, 3, {'weight': 5.3}), (0, 2, {'weight'
 
 @app.route('/', methods=['GET'])
 def index():
-    """主页"""
+    """
+    获取首页
+    :return: 渲染后的首页网页
+    """
     categories = []
     for t in trucks_data:
         for i in range(t[1]):
@@ -35,28 +38,46 @@ def index():
 
 @app.route('/trucks', methods=['GET'])
 def get_trucks():
+    """
+    获取卡车配置页面
+    :return: 渲染后的卡车配置页面
+    """
     global trucks_data
     return render_template("trucks.html", trucks_data=trucks_data)
 
 
 @app.route('/network', methods=['GET'])
 def get_network():
-    """配置网络接口"""
+    """
+    获取网络配置页面
+    :return: 渲染后的网络配置页面
+    """
     return render_template("network.html", nodes_data=nodes_data, edges_data=edges_data)
 
 
 @app.route('/trucks', methods=['POST'])
 def set_trucks():
-    """配置卡车接口"""
+    """
+    卡车配置接口
+    :return: 如果配置成功，返回success，否则返回fail
+    """
     global trucks_data
-    trucks_data = list(zip(request.form.getlist('name[]'), request.form.getlist('nums[]'),
-                           request.form.getlist('d_max[]'), request.form.getlist('w_max[]')))
+    names = request.form.getlist('name[]')
+    nums = request.form.getlist('nums[]')
+    d_maxs = request.form.getlist('d_max[]')
+    w_maxs = request.form.getlist('w_max[]')
+    n = len(names)
+    trucks_data = [(names[i], int(nums[i]), float(d_maxs[i]), float(w_maxs[i])) for i in range(n)]
     print(trucks_data)
     return "success"
 
 
 @app.route('/network/nodes', methods=['POST'])
 def set_network_nodes():
+    """
+    网络顶点配置接口
+    :return: 如果配置成功，返回success，否则返回fail
+    """
     global nodes_data
     names = request.form.getlist('name[]')
     demands = request.form.getlist('demand[]')
@@ -68,6 +89,10 @@ def set_network_nodes():
 
 @app.route('/network/edges', methods=['POST'])
 def set_network_edges():
+    """
+    网络边配置接口
+    :return: 如果配置成功，返回success，否则返回fail
+    """
     global edges_data
     u = request.form.getlist('u[]')
     v = request.form.getlist('v[]')
@@ -80,6 +105,10 @@ def set_network_edges():
 
 @app.route('/', methods=['POST'])
 def apply_algorithm():
+    """
+    首页应用算法接口
+    :return: 线路优化算法的输出结果
+    """
     global trucks_data
     # 生成初始卡车列表
     trucks_initial = []
@@ -100,6 +129,10 @@ def apply_algorithm():
 
 @app.route('/gexf', methods=['GET'])
 def get_gexf():
+    """
+    获取配送网络可视化信息
+    :return: 配送网络的gexf文件内容
+    """
     return render_template("gexf/network.gexf")
 
 
