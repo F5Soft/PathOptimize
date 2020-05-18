@@ -3,9 +3,16 @@
 {% block content %}
     <div id="set_trucks" class="container">
         <h4>物流网络配置</h4>
-        <button id="import_csv" type="button" class="btn btn-primary" style="margin-top:20px; margin-bottom: 20px">
-            导入CSV文件
-        </button>
+        <br>
+        <form id="csv">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="csv_file">
+                <label class="custom-file-label" for="csv_file" data-browse="选择...">请按照 (节点名称, x坐标, y坐标, 需求量)
+                    格式上传csv文件</label>
+            </div>
+        </form>
+        <br>
+        <button id="csv_upload" type="button" class="btn btn-primary">上传CSV文件</button>
         <hr>
         <h5>当前物流网络预览</h5>
         <div id="echart" style="width: 95%; height: 400px; margin: auto;"></div>
@@ -44,11 +51,11 @@
                 {% endfor %}
                 </tbody>
             </table>
-            <button id="node_add" type="button" class="btn btn-primary">添加节点</button>
-            <button id="node_save" type="button" class="btn btn-success">保存</button>
         </form>
+        <button id="node_add" type="button" class="btn btn-primary">添加节点</button>
+        <button id="node_save" type="button" class="btn btn-success">保存</button>
         <hr>
-        <<h5>边配置</h5>
+        <h5>边配置</h5>
         <br>
         <form id="edge_form" class="was-validated">
             <table class="table table-bordered">
@@ -101,14 +108,28 @@
                 {% endfor %}
                 </tbody>
             </table>
-            <button id="edge_add" type="button" class="btn btn-primary">添加路径</button>
-            <button id="edge_save" type="button" class="btn btn-success">保存</button>
         </form>
+        <button id="edge_add" type="button" class="btn btn-primary">添加路径</button>
+        <button id="edge_save" type="button" class="btn btn-success">保存</button>
     </div>
 {% endblock %}
 {% block script %}
     {% include 'echarts.html' %}
     <script>
+        $("#csv_upload").click(function () {
+            let form_data = new FormData();
+            form_data.append('csv', $('#csv_file').get(0).files[0]);
+            $.ajax("{{ url_for('set_network_csv') }}", {
+                method: "POST",
+                data: form_data,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    console.log(data);
+                }
+            })
+        });
+
         $('.node_modify').click(function () {
             let parent = $(this).parent();
             $(".node_modify", parent).attr("hidden", true);

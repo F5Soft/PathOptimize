@@ -24,7 +24,7 @@
         let paths = eval(graph.nodes[0].attributes[2]);
         {% if categories %}
             let categories = [];
-            categories[0] = {name: "配送中心"};
+            categories[0] = {name: "物流中心"};
             {% for c in categories %}
                 categories.push({name: "{{c}}"});
             {% endfor %}

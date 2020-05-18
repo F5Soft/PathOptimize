@@ -6,9 +6,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ url_for('static', filename = 'css/bootstrap.min.css') }}">
-    <script src="{{ url_for('static', filename = 'js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/popper.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/bootstrap.min.js') }}"></script>
 </head>
 
 <body>
@@ -27,10 +24,7 @@
 </nav>
 <hr>
 {% block content %}{% endblock %}
-</body>
-
-{% block script %}{% endblock %}
-
+<hr>
 <footer>
     <!--
     <div class="container" style="text-align: center">
@@ -38,4 +32,9 @@
     </div>
     -->
 </footer>
+<script src="{{ url_for('static', filename = 'js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'js/popper.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'js/bootstrap.min.js') }}"></script>
+{% block script %}{% endblock %}
+</body>
 </html>

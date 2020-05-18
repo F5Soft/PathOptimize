@@ -88,5 +88,7 @@ def genetic_algorithm(population, iteration=10, mutation_rate=0.1, recombination
         # todo 优化遗传算法的速度和准确率
         # 如果适应度小于0，说明重量或者距离超过上限，不可取，但是会导致这里跑很久，不知道怎么办
         if network_best.adaptive() > 0:
+            iteration -= 3
+        else:
             iteration -= 1
     return network_best

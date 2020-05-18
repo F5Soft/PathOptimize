@@ -1,5 +1,6 @@
 import pickle
 
+import numpy as np
 from flask import *
 
 from modules import algorithm as alg
@@ -24,11 +25,11 @@ try:
     f.close()
     print("[NOTE] 使用已保存的顶点信息")
 except FileNotFoundError:
-    nodes_data = [(0, {'name': '配送中心', 'demand': 0.0}), (1, {'name': '配送点1', 'demand': 2.0}),
-                  (2, {'name': '配送点2', 'demand': 1.5}), (3, {'name': '配送点3', 'demand': 4.5}),
-                  (4, {'name': '配送点4', 'demand': 3.0}), (5, {'name': '配送点5', 'demand': 1.5}),
-                  (6, {'name': '配送点6', 'demand': 4.0}), (7, {'name': '配送点7', 'demand': 2.5}),
-                  (8, {'name': '配送点8', 'demand': 3.0})]
+    nodes_data = [(0, {'name': '物流中心', 'demand': 0.0}), (1, {'name': '物流点1', 'demand': 2.0}),
+                  (2, {'name': '物流点2', 'demand': 1.5}), (3, {'name': '物流点3', 'demand': 4.5}),
+                  (4, {'name': '物流点4', 'demand': 3.0}), (5, {'name': '物流点5', 'demand': 1.5}),
+                  (6, {'name': '物流点6', 'demand': 4.0}), (7, {'name': '物流点7', 'demand': 2.5}),
+                  (8, {'name': '物流点8', 'demand': 3.0})]
 
 # 尝试打开边数据文件，如果不存在，则使用默认数据
 try:
@@ -83,10 +84,10 @@ def get_network():
 @app.route('/gexf', methods=['GET'])
 def get_gexf():
     """
-    获取配送网络可视化信息
-    :return: 配送网络的gexf文件内容
+    获取物流网络可视化信息
+    :return: 物流网络的gexf文件内容
     """
-    if request.args.get('raw', None):
+    if request.args.get('raw', ''):
         return render_template("gexf/network_raw.gexf")
     else:
         return render_template("gexf/network.gexf")
@@ -141,11 +142,43 @@ def set_network_edges():
     v = request.form.getlist('v[]')
     weights = request.form.getlist('weight[]')
     n = len(weights)
-    edges_data = [(int(u[i]), int(v[i]), {'weight': float(weights[i])}) for i in range(n)]
+    edges_data = [(int(u[i]), int(v[i]), {'weight': float(weights[i])}) for i in range(n) if int(u[i]) != int(v[i])]
     # 写入本地数据文件
     with open("data/edges.dat", 'wb') as f:
         pickle.dump(edges_data, f)
     print("[NOTE] 边信息被修改:", edges_data)
+    return "success"
+
+
+@app.route('/network/csv', methods=['POST'])
+def set_network_csv():
+    global nodes_data, edges_data
+    csv = request.files.get('csv')
+    data = csv.read().decode()
+    # 按行读取数据
+    nodes = []
+    node_pos = []
+    for i, line in enumerate(data.strip().split('\n')):
+        items = line.split(',')
+        nodes.append((i, {"name": items[0], "demand": float(items[3])}))
+        node_pos.append((float(items[1]), float(items[2])))
+    n = len(nodes)
+    # 生成邻接矩阵
+    edges = []
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                dist = ((node_pos[i][0] - node_pos[j][0]) ** 2 + (node_pos[i][1] - node_pos[j][1]) ** 2) ** 0.5
+                edges.append((i, j, {"weight": dist}))
+    nodes_data = nodes
+    edges_data = edges
+    with open("data/nodes.dat", 'wb') as f:
+        pickle.dump(nodes_data, f)
+    with open("data/edges.dat", 'wb') as f:
+        pickle.dump(edges_data, f)
+    print("[NOTE] 通过CSV上传网络数据:")
+    print(nodes_data)
+    print(edges_data)
     return "success"
 
 
@@ -167,7 +200,7 @@ def apply_algorithm():
     # 初始化种群并开始遗传算法
     # todo 调整遗传算法参数：种群数，突变率等，让算法收敛的快些
     population = alg.population_init(network_initial, 20)
-    network_best = alg.genetic_algorithm(population, mutation_rate=0.15, recombination_rate=0.7)
+    network_best = alg.genetic_algorithm(population, iteration=30, mutation_rate=0.15, recombination_rate=0.7)
     print("[NOTE] 算法输出结果:")
     print(network_best)
     print("[NOTE] 适应度函数值:", network_best.adaptive())
