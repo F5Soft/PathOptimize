@@ -3,16 +3,25 @@
     <div class="container">
         <button id="apply" class="btn btn-primary">应用算法</button>
     </div>
+    <hr>
+    <div id="echart" style="width: 95%; height: 600px; margin: auto;"></div>
+    <div class="container">
+        <h6>程序输出结果</h6>
+        <div id="result"></div>
+    </div>
 {% endblock %}
 {% block script %}
+    {% include 'echarts.html' %}
     <script>
-        $("#apply").click(function () {
-            $.ajax("{{ url_for('index') }}", {
-                method: "POST",
-                success: function (data) {
-                    console.log(data);
-                }
-            })
+    $("#apply").click(function () {
+        chart.showLoading();
+        $.ajax("{{ url_for('index') }}", {
+            method: "POST",
+            success: function (data) {
+                $("#result").html("<pre>" + data + "</pre>");
+                set_echarts();
+            }
         })
+    });
     </script>
 {% endblock %}

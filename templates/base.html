@@ -2,43 +2,39 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>配送线路优化系统</title>
+    <title>物流网络优化算法</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ url_for('static', filename = 'css/bootstrap.min.css') }}">
-    <script src="{{ url_for('static', filename = 'js/popper.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/bootstrap.min.js') }}"></script>
 </head>
 
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="{{ url_for('index') }}">配送线路优化系统</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar"
-            aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbar">
+    <a class="navbar-brand" href="{{ url_for('index') }}">物流网络优化算法</a>
+    <div class="navbar-expand" id="navbar">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('get_trucks') }}">车辆配置</a>
+                <a class="nav-link" href="{{ url_for('get_trucks') }}">物流车辆配置</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('get_network') }}">配送网络配置</a>
+                <a class="nav-link" href="{{ url_for('get_network') }}">物流网络配置</a>
             </li>
         </ul>
     </div>
 </nav>
 <hr>
 {% block content %}{% endblock %}
-</body>
-
-{% block script %}{% endblock %}
-
+<hr>
 <footer>
+    <!--
     <div class="container" style="text-align: center">
         <h6>建个模团队 制作</h6>
     </div>
+    -->
 </footer>
+<script src="{{ url_for('static', filename = 'js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'js/popper.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'js/bootstrap.min.js') }}"></script>
+{% block script %}{% endblock %}
+</body>
 </html>

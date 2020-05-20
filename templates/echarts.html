@@ -1,0 +1,91 @@
+<script src="{{ url_for('static', filename = 'js/echarts.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'js/dataTool.min.js') }}"></script>
+<script>
+    let chart;
+
+    $(document).ready(function () {
+        chart = echarts.init($("#echart").get(0));
+        get_echarts();
+    });
+
+    $(window).resize(function () {
+        chart.resize();
+    });
+
+    function get_echarts() {
+        {% if categories %}
+            $.get("{{ url_for('get_gexf') }}", set_echarts, "xml");
+        {% else %}
+            $.get("{{ url_for('get_gexf', raw='true') }}", set_echarts, "xml");
+        {% endif %}
+    }
+
+    function set_echarts(xml) {
+        chart.hideLoading();
+        let graph = echarts.dataTool.gexf.parse(xml);
+        let paths = eval(graph.nodes[0].attributes[2]);
+        {% if categories %}
+            let categories = [];
+            categories[0] = {name: "物流中心"};
+            {% for c in categories %}
+                categories.push({name: "{{c}}"});
+            {% endfor %}
+        {% endif %}
+        let total_demand = 0;
+        for (let i = 1; i < graph.nodes.length; i++) {
+            graph.nodes[i].name = graph.nodes[i].attributes[0];
+            graph.nodes[i].symbolSize = parseInt(graph.nodes[i].attributes[1]) * 5;
+            {% if categories %}
+                graph.nodes[i].category = parseInt(graph.nodes[i].attributes[2]) + 1;
+            {% endif %}
+            total_demand += graph.nodes[i].symbolSize * graph.nodes[i].symbolSize;
+        }
+        graph.nodes[0].name = "物流中心";
+        graph.nodes[0].symbolSize = Math.sqrt(total_demand);
+        {% if categories %}
+            graph.nodes[0].category = 0;
+            let edges = new Array(graph.nodes.length);
+            for (let i = 0; i < edges.length; i++) {
+                edges[i] = new Array(graph.nodes.length);
+            }
+            for (let i = 0; i < graph.links.length; i++) {
+                let source = parseInt(graph.links[i].source);
+                let target = parseInt(graph.links[i].target);
+                edges[source][target] = graph.links[i];
+                edges[target][source] = graph.links[i];
+            }
+            for (let i = 0; i < paths.length; i++) {
+                for (let j = 0; j < paths[i].length - 1; j++) {
+                    edges[paths[i][j]][paths[i][j + 1]].lineStyle = {color: 'target', width: 8};
+                }
+            }
+        {% endif %}
+        let option = {
+            {% if categories %}
+                legend: [{
+                    data: categories.map(function (a) {
+                        return a.name;
+                    })
+                }],
+            {% endif %}
+            series: [
+                {
+                    type: 'graph',
+                    layout: 'force',
+                    data: graph.nodes,
+                    links: graph.links,
+                    {% if categories %}
+                        categories: categories,
+                    {% endif %}
+                    roam: true,
+                    draggable: true,
+                    force: {
+                        repulsion: 0,
+                        edgeLength: [50, 400]
+                    }
+                }
+            ]
+        };
+        chart.setOption(option);
+    }
+</script>

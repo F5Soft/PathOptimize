@@ -2,78 +2,240 @@
 
 {% block content %}
     <div id="set_trucks" class="container">
-        <h4>配送网络配置</h4>
-        <div id="echart" style="width: 600px; height: 400px; margin: auto;"></div>
+        <h4>物流网络配置</h4>
+        <br>
+        <form id="csv">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="csv_file">
+                <label class="custom-file-label" for="csv_file" data-browse="选择...">请按照 (节点名称, x坐标, y坐标, 需求量)
+                    格式上传csv文件</label>
+            </div>
+        </form>
+        <br>
+        <button id="csv_upload" type="button" class="btn btn-primary">上传CSV文件</button>
+        <hr>
+        <h5>当前物流网络预览</h5>
+        <div id="echart" style="width: 95%; height: 400px; margin: auto;"></div>
+        <hr>
+        <h5>顶点配置</h5>
+        <br>
+        <form id="node_form" class="was-validated">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">节点名称</th>
+                    <th scope="col">所需货物重量(kg)</th>
+                    <th scope="col">操作</th>
+                </tr>
+                </thead>
+                <tbody class="node_tbody">
+                {% for node in nodes_data %}
+                    <tr>
+                        <th scope="row">
+                            <input name="name[]" value="{{ node[1]['name'] }}" type="text"
+                                   class="form-control form-control-sm node_name" readonly required>
+                        </th>
+                        <td>
+                            <input name="demand[]" value="{{ node[1]['demand'] }}" type="number" min="0.01" step="0.01"
+                                   class="form-control form-control-sm" readonly required>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary node_modify">修改
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success node_confirm" hidden>确定
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger del">删除
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </form>
+        <button id="node_add" type="button" class="btn btn-primary">添加节点</button>
+        <button id="node_save" type="button" class="btn btn-success">保存</button>
+        <hr>
+        <h5>边配置</h5>
+        <br>
+        <form id="edge_form" class="was-validated">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">起始节点</th>
+                    <th scope="col">终止节点</th>
+                    <th scope="col">距离(km)</th>
+                    <th scope="col">操作</th>
+                </tr>
+                </thead>
+                <tbody class="edge_tbody">
+                {% for edge in edges_data %}
+                    <tr>
+                        <th scope="row">
+                            <select name="u[]" class="form-control form-control-sm" readonly>
+                                {% for node in nodes_data %}
+                                    {% if node[0] == edge[0] %}
+                                        <option value="{{ node[0] }}" selected>{{ node[1]['name'] }}</option>
+                                    {% else %}
+                                        <option value="{{ node[0] }}">{{ node[1]['name'] }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <td>
+                            <select name="v[]" class="form-control form-control-sm" readonly>
+                                {% for node in nodes_data %}
+                                    {% if node[0] == edge[1] %}
+                                        <option value="{{ node[0] }}" selected>{{ node[1]['name'] }}</option>
+                                    {% else %}
+                                        <option value="{{ node[0] }}">{{ node[1]['name'] }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <input name="weight[]" value="{{ edge[2]['weight'] }}" type="number"
+                                   class="form-control form-control-sm" min="0.01" step="0.01" readonly required>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary edge_modify">修改
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success edge_confirm" hidden>确定
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger del">删除
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </form>
+        <button id="edge_add" type="button" class="btn btn-primary">添加路径</button>
+        <button id="edge_save" type="button" class="btn btn-success">保存</button>
     </div>
 {% endblock %}
-
 {% block script %}
-    <script src="{{ url_for('static', filename = 'js/echarts.min.js') }}"></script>
-    <script src="{{ url_for('static', filename = 'js/dataTool.min.js') }}"></script>
+    {% include 'echarts.html' %}
     <script>
-        var dom = document.getElementById("echart");
-        var myChart = echarts.init(dom);
-        var app = {};
-        option = null;
-        myChart.showLoading();
-        $.get("{{ url_for('static', filename='gexf/test.gexf') }}", function (xml) {
-            myChart.hideLoading();
+        $("#csv_upload").click(function () {
+            let form_data = new FormData();
+            form_data.append('csv', $('#csv_file').get(0).files[0]);
+            $.ajax("{{ url_for('set_network_csv') }}", {
+                method: "POST",
+                data: form_data,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    console.log(data);
+                }
+            })
+        });
 
-            var graph = echarts.dataTool.gexf.parse(xml);
-            var categories = [];
-            for (var i = 0; i < 9; i++) {
-                categories[i] = {
-                    name: '类目' + i
-                };
+        $('.node_modify').click(function () {
+            let parent = $(this).parent();
+            $(".node_modify", parent).attr("hidden", true);
+            $(".node_confirm", parent).attr("hidden", false);
+            $("input", parent.parent()).attr("readonly", false);
+        });
+
+        $('.edge_modify').click(function () {
+            let parent = $(this).parent();
+            $(".edge_modify", parent).attr("hidden", true);
+            $(".edge_confirm", parent).attr("hidden", false);
+            $("input", parent.parent()).attr("readonly", false);
+            $("select", parent.parent()).attr("readonly", false);
+        });
+
+        $('.node_confirm').click(function () {
+            let parent = $(this).parent();
+            let input = $("input", parent.parent());
+            for (let i = 0; i < input.length; i++) {
+                if (input.get(i).validity.valid === false) {
+                    return;
+                }
             }
-            graph.nodes.forEach(function (node) {
-                node.itemStyle = null;
-                node.symbolSize = 10;
-                node.value = node.symbolSize;
-                node.category = node.attributes.modularity_class;
-                // Use random x, y
-                node.x = node.y = null;
-                node.draggable = true;
-            });
-            option = {
-                title: {
-                    text: 'Les Miserables',
-                    subtext: 'Default layout',
-                    top: 'bottom',
-                    left: 'right'
-                },
-                tooltip: {},
-                legend: [{
-                    // selectedMode: 'single',
-                    data: categories.map(function (a) {
-                        return a.name;
-                    })
-                }],
-                animation: false,
-                series: [
-                    {
-                        name: 'Les Miserables',
-                        type: 'graph',
-                        layout: 'force',
-                        data: graph.nodes,
-                        links: graph.links,
-                        categories: categories,
-                        roam: true,
-                        label: {
-                            position: 'right'
-                        },
-                        force: {
-                            repulsion: 100
-                        }
-                    }
-                ]
-            };
+            $(".node_confirm", parent).attr("hidden", true);
+            $(".node_modify", parent).attr("hidden", false);
+            input.attr("readonly", true);
+        });
 
-            myChart.setOption(option);
-        }, 'xml');
-        ;
-        if (option && typeof option === "object") {
-            myChart.setOption(option, true);
-        }
+        $('.edge_confirm').click(function () {
+            let parent = $(this).parent();
+            let input = $("input", parent.parent());
+            if (input.get(0).validity.valid === false) {
+                return;
+            }
+            $(".edge_confirm", parent).attr("hidden", true);
+            $(".edge_modify", parent).attr("hidden", false);
+            $("select", parent.parent()).attr("readonly", true);
+            input.attr("readonly", true);
+        });
+
+        $(".del").click(function () {
+            $(this).parent().parent().remove();
+        });
+
+        $("#node_add").click(function () {
+            let table = $(".node_tbody");
+            table.children(":first").clone(true).appendTo(table);
+            let self = table.children(":last");
+            $(".node_modify", self).attr("hidden", true);
+            $(".node_confirm", self).attr("hidden", false);
+            $("input", self).attr({"value": "", "readonly": false});
+        });
+
+        $("#edge_add").click(function () {
+            let table = $(".edge_tbody");
+            table.children(":first").clone(true).appendTo(table);
+            let self = table.children(":last");
+            $(".edge_modify", self).attr("hidden", true);
+            $(".edge_confirm", self).attr("hidden", false);
+            $("input", self).attr({"value": "", "readonly": false});
+            $("select", self).attr("readonly", false);
+        });
+
+        $("#node_save").click(function () {
+            let form = $("#node_form");
+            if (form.get(0).checkValidity() === true) {
+                /*let select = $("select");
+                let node_name = $(".node_name");
+                select.empty();
+                for (let i = 0; i < node_name.length; i++) {
+                    select.append("<option value=\"" + i + "\">" + node_name[i].value + "</option>");
+                    //todo 每次保存节点后，使边的信息尽可能不变。比如原来选中的是这个节点，如果修改后这个节点还在，就不改变，否则让当前选择变成空白
+                    //temp solution 直接刷新页面，重新渲染，简单粗暴2333
+                }*/
+                $.ajax("{{ url_for('set_network_nodes') }}", {
+                    method: "POST",
+                    data: form.serialize(),
+                    success: function (data) {
+                        console.log(data);
+                    }
+                });
+                /*
+                $("input", ".node_tbody").attr("readonly", true);
+                $(".node_confirm", ".node_tbody").attr("hidden", true);
+                $(".node_modify", ".node_tbody").attr("hidden", false);*/
+                window.location.reload();
+            }
+        });
+
+        $("#edge_save").click(function () {
+            let form = $("#edge_form");
+            if (form.get(0).checkValidity() === true) {
+                $.ajax("{{ url_for('set_network_edges') }}", {
+                    method: "POST",
+                    data: form.serialize(),
+                    success: function (data) {
+                        console.log(data);
+                    }
+                });
+                /*
+                $("input", ".edge_tbody").attr("readonly", true);
+                $(".edge_confirm", ".edge_tbody").attr("hidden", true);
+                $(".edge_modify", ".edge_tbody").attr("hidden", false);
+                $("select", ".edge_tbody").attr("readonly", true);*/
+                window.location.reload();
+            }
+        });
     </script>
 {% endblock %}
