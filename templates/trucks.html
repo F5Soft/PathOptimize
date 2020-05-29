@@ -2,7 +2,7 @@
 
 {% block content %}
     <div id="set_trucks" class="container">
-        <h4>物流车辆配置</h4>
+        <h4>配送车辆配置</h4>
         <br>
         <form id="trucks_form" class="was-validated">
             <table class="table table-bordered">
@@ -22,9 +22,9 @@
                                                class="form-control form-control-sm" readonly required></th>
                         <td><input name="nums[]" value="{{ truck[1] }}" type="number" min="1"
                                    class="form-control form-control-sm" readonly required></td>
-                        <td><input name="d_max[]" value="{{ truck[2] }}" type="number" min="0.01" step="0.01"
+                        <td><input name="d_max[]" value="{{ truck[2] }}" type="number" min="0" step="0.01"
                                    class="form-control form-control-sm" readonly required></td>
-                        <td><input name="w_max[]" value="{{ truck[3] }}" type="number" min="0.01" step="0.01"
+                        <td><input name="w_max[]" value="{{ truck[3] }}" type="number" min="0" step="0.01"
                                    class="form-control form-control-sm" readonly required></td>
                         <td>
                             <button type="button" class="btn btn-sm btn-outline-primary modify">修改

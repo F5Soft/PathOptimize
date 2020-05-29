@@ -13,15 +13,15 @@
 {% block script %}
     {% include 'echarts.html' %}
     <script>
-    $("#apply").click(function () {
-        chart.showLoading();
-        $.ajax("{{ url_for('index') }}", {
-            method: "POST",
-            success: function (data) {
-                $("#result").html("<pre>" + data + "</pre>");
-                set_echarts();
-            }
-        })
-    });
+        $("#apply").click(function () {
+            chart.showLoading();
+            $.ajax("{{ url_for('index') }}", {
+                method: "POST",
+                success: function (data) {
+                    $("#result").html("<pre>" + data + "</pre>");
+                    get_echarts();
+                }
+            })
+        });
     </script>
 {% endblock %}

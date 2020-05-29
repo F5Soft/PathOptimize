@@ -4,7 +4,6 @@
 
 import copy
 import random
-import time
 from typing import List
 
 import numpy as np
@@ -42,9 +41,9 @@ def natural_selection(population):
 
 def gene_mutation(population, mutation_rate=0.1):
     """
-    使网络种群中所有卡车的基因按照给定的概率突变
+    使网络种群中所有车辆的基因按照给定的概率突变
     :param population: 网络种群
-    :param mutation_rate: 每个卡车的基因的突变率
+    :param mutation_rate: 每个车辆的基因的突变率
     :return: None
     """
     for p in population:
@@ -79,7 +78,7 @@ def genetic_algorithm(population, iteration=10, mutation_rate=0.1, recombination
         natural_selection(population)
         gene_mutation(population, mutation_rate)
         gene_recombination(population, recombination_rate)
-        # 根据突变后的基因，重新计算网络中每辆卡车范围和路径
+        # 根据突变后的基因，重新计算网络中每辆车辆范围和路径
         for p in population:
             p.coverage_allocate()
             p.path_generate()

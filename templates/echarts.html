@@ -4,7 +4,6 @@
     let chart;
 
     $(document).ready(function () {
-        chart = echarts.init($("#echart").get(0));
         get_echarts();
     });
 
@@ -13,6 +12,7 @@
     });
 
     function get_echarts() {
+        chart = echarts.init($("#echart").get(0));
         {% if categories %}
             $.get("{{ url_for('get_gexf') }}", set_echarts, "xml");
         {% else %}
@@ -22,11 +22,12 @@
 
     function set_echarts(xml) {
         chart.hideLoading();
+        chart.clear();
         let graph = echarts.dataTool.gexf.parse(xml);
         let paths = eval(graph.nodes[0].attributes[2]);
         {% if categories %}
             let categories = [];
-            categories[0] = {name: "物流中心"};
+            categories[0] = {name: "配送中心"};
             {% for c in categories %}
                 categories.push({name: "{{c}}"});
             {% endfor %}
@@ -40,7 +41,7 @@
             {% endif %}
             total_demand += graph.nodes[i].symbolSize * graph.nodes[i].symbolSize;
         }
-        graph.nodes[0].name = "物流中心";
+        graph.nodes[0].name = "配送中心";
         graph.nodes[0].symbolSize = Math.sqrt(total_demand);
         {% if categories %}
             graph.nodes[0].category = 0;

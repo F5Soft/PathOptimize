@@ -2,7 +2,7 @@
 
 {% block content %}
     <div id="set_trucks" class="container">
-        <h4>物流网络配置</h4>
+        <h4>配送网络配置</h4>
         <br>
         <form id="csv">
             <div class="custom-file">
@@ -14,7 +14,7 @@
         <br>
         <button id="csv_upload" type="button" class="btn btn-primary">上传CSV文件</button>
         <hr>
-        <h5>当前物流网络预览</h5>
+        <h5>当前配送网络预览</h5>
         <div id="echart" style="width: 95%; height: 400px; margin: auto;"></div>
         <hr>
         <h5>顶点配置</h5>
@@ -36,7 +36,7 @@
                                    class="form-control form-control-sm node_name" readonly required>
                         </th>
                         <td>
-                            <input name="demand[]" value="{{ node[1]['demand'] }}" type="number" min="0.01" step="0.01"
+                            <input name="demand[]" value="{{ node[1]['demand'] }}" type="number" min="0" step="0.01"
                                    class="form-control form-control-sm" readonly required>
                         </td>
                         <td>
@@ -94,7 +94,7 @@
                         </td>
                         <td>
                             <input name="weight[]" value="{{ edge[2]['weight'] }}" type="number"
-                                   class="form-control form-control-sm" min="0.01" step="0.01" readonly required>
+                                   class="form-control form-control-sm" min="0" step="0.01" readonly required>
                         </td>
                         <td>
                             <button type="button" class="btn btn-sm btn-outline-primary edge_modify">修改
@@ -201,7 +201,7 @@
                 select.empty();
                 for (let i = 0; i < node_name.length; i++) {
                     select.append("<option value=\"" + i + "\">" + node_name[i].value + "</option>");
-                    //todo 每次保存节点后，使边的信息尽可能不变。比如原来选中的是这个节点，如果修改后这个节点还在，就不改变，否则让当前选择变成空白
+                    //每次保存节点后，使边的信息尽可能不变。比如原来选中的是这个节点，如果修改后这个节点还在，就不改变，否则让当前选择变成空白
                     //temp solution 直接刷新页面，重新渲染，简单粗暴2333
                 }*/
                 $.ajax("{{ url_for('set_network_nodes') }}", {

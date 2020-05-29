@@ -3,7 +3,9 @@
 """
 
 import copy
+import os
 import random
+import sys
 from typing import List
 
 import networkx as nx
@@ -32,9 +34,14 @@ class Network:
         pr = ""
         d = 0.0
         for t in self.trucks:
-            pr += str(t) + '\n'
+            pr += "[%s] 路线: " % t.name
+            pr += self.graph.nodes[0]['name']
+            for u in t.path[1:]:
+                pr += '=>'
+                pr += self.graph.nodes[u]['name']
+            pr += ", 当前载重: %.2fkg, 线路长度: %.2fkm" % (t.w, t.d) + '\n'
             d += t.d
-        return pr + "Total distance: %.2fkm" % d
+        return pr + "所有车辆总行驶路程: %.2fkm" % d
 
     def __copy__(self):
         nodes = self.graph.nodes(data=True)
@@ -45,7 +52,7 @@ class Network:
 
     def coverage_init(self):
         """
-        初始化网络中各个卡车的配送范围
+        初始化网络中各个车辆的配送范围
         :return: None
         """
         n = len(self.graph)
@@ -55,7 +62,7 @@ class Network:
 
     def coverage_mutation(self, mutation_rate=0.1):
         """
-        使所有卡车的基因按照给定的概率突变
+        使所有车辆的基因按照给定的概率突变
         :param mutation_rate: 突变概率
         :return: None
         """
@@ -66,7 +73,7 @@ class Network:
 
     def coverage_recombination(self, network2):
         """
-
+        使该网络和另一个网络之间发生基因重组
         :param network2:
         :return: None
         """
@@ -80,7 +87,7 @@ class Network:
 
     def coverage_allocate(self):
         """
-        通过各个卡车的基因情况分配卡车的配送范围
+        通过各个车辆的基因情况分配车辆的配送范围
         :return: None
         """
         # 统计基因信息
@@ -97,9 +104,9 @@ class Network:
                 graph.nodes[t.gene]['label'] = i
             else:
                 graph.nodes[t.gene]['label'] = i
-        # 根据顶点标号进行顶点分类，属于图神经网络的内容，可以搜相关资料写进文档，这里直接调个包
+        # 根据顶点标号进行顶点分类
         partition = nx.algorithms.node_classification.harmonic_function(graph)
-        # 更新卡车范围
+        # 更新车辆范围
         for t in self.trucks:
             t.coverage.clear()
             t.coverage.add(0)
@@ -112,7 +119,7 @@ class Network:
 
     def path_generate(self):
         """
-        生成所有卡车在各自配送范围内的回路
+        生成所有车辆在各自配送范围内的回路
         :return: None
         """
         for t in self.trucks:
@@ -135,13 +142,13 @@ class Network:
 
     def path_generate_for_truck_tsp(self, truck: Truck):
         """
-        生成一个卡车的回路
+        生成一个车辆的回路
         数学模型：d[i][status]表示从编号i城市出发，经过status中为1的顶点并回到配送中心的最小花费。其中状态status用二进制数来表示
         右起第i位表示第i个城市的状态，0为未拜访，1为已拜访。设i, j为顶点映射到整数的编号，u, v为对应的真实的顶点编号，则状态转移方程为：
         ```d[i][status] = min(dists[u][v] + d[j][status^(1<<j)]) for j=0 to n-1```
         其中v是u的所有邻接顶点，依次取值来得到最小值。dists[u][v]表示城市到城市u到v的最短路程。
         时间复杂度：Floyd预处理为O(n^3)，枚举各种状态的时间复杂度为O(2^n*n^2)，总的时间复杂度即为O(2^n*n^2)
-        :param truck: 待生成回路的卡车
+        :param truck: 待生成回路的车辆
         :return: None
         """
         # 取子图，求Floyd
@@ -182,14 +189,14 @@ class Network:
             if dist < dist_opt:
                 dist_opt = dist
                 path_opt = nx.reconstruct_path(0, v, predecessors)[:-1] + path[v][status ^ status_v]
-        # 更新卡车路径
+        # 更新车辆路径
         truck.d = dist_opt
         truck.path = path_opt
 
     def path_generate_for_truck_greedy(self, truck: Truck):
         """
-        通过贪心算法，生成一个卡车的次优回路，时间复杂度为O(n^2)
-        :param truck: 待生成回路的卡车
+        通过贪心算法，生成一个车辆的次优回路，时间复杂度为O(n^2)
+        :param truck: 待生成回路的车辆
         :return: None
         """
         # Floyd预处理
@@ -212,23 +219,22 @@ class Network:
             d += dists[u][v_opt]
             path += nx.reconstruct_path(u, v_opt, predecessors)[:-1]
             u = v_opt
-        # 更新卡车路径
+        # 更新车辆路径
         truck.d = d + dists[u][0]
         truck.path = path + [u, 0]
 
     def adaptive(self) -> float:
         """
-        求该配送网络的适应度值，用于自然选择，为该网络的平均卡车适应度值
+        求该配送网络的适应度值，用于自然选择，为该网络的平均车辆适应度值
         :return: float 适应度值
         """
-        # todo 优化适应度函数，使之既能反映单个卡车的适应度，又能反映总距离d_tot
-        adaptive_mean = np.mean([t.adaptive() for t in self.trucks if len(t.coverage) > 1])  # 各个有任务的卡车适应度平均
+        adaptive_mean = np.mean([t.adaptive() for t in self.trucks if len(t.coverage) > 1])  # 各个有任务的车辆适应度平均
         d_tot = np.sum([t.d for t in self.trucks if len(t.coverage) > 1])  # 总路程
         return adaptive_mean / d_tot
 
     def gexf_summary(self, filename: str):
         """
-        导出图像的gexf信息，用于echarts插件读取
+        导出配送网络的gexf信息，用于echarts插件读取
         :param filename: 文件名
         :return: None
         """
@@ -244,4 +250,4 @@ class Network:
             paths.append(t.path)
         graph.nodes[0]['truck'] = str(paths)
         graph.nodes[0]['demand'] = str(graph.nodes[0]['demand'])
-        nx.write_gexf(graph, "templates/gexf/" + filename)
+        nx.write_gexf(graph, os.path.join(os.path.dirname(sys.argv[0]), "data/gexf/") + filename)

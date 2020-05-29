@@ -11,7 +11,7 @@ class Truck:
     车辆类
     """
 
-    path_of_coverage = dict()  # 配送范围对应路径和路径长度的映射
+    path_of_coverage = dict()  # 负责范围对应路径和路径长度的映射
 
     def __init__(self, name: str, d_max: float, w_max: float):
         """
@@ -29,10 +29,6 @@ class Truck:
         self.subgraph = nx.Graph()  # 车辆覆盖范围生成的子图
         self.path = []  # 车辆在子图中的路径
 
-    def __repr__(self):
-        return "[%s] d_max=%.2f w_max=%.2f d=%.2f w=%.2f path=" % (
-            self.name, self.d_max, self.w_max, self.d, self.w) + str(self.path) + " coverage=" + str(self.coverage)
-
     def __copy__(self):
         cp = Truck(self.name, self.d_max, self.w_max)
         cp.d = self.d
@@ -43,7 +39,7 @@ class Truck:
 
     def coverage_hash(self) -> int:
         """
-        生成单个车辆配送范围的哈希值，即从有限个元素的set转为二进制表示的int
+        生成单个车辆负责范围的哈希值，即从有限个元素的set转为二进制表示的int
         :return: int 哈希值
         """
         hsh = 0
